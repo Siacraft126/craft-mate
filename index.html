@@ -1,389 +1,348 @@
-<!DOCTYPE html>
+from pathlib import Path
+import json
+
+# Full user-supplied price catalog, encoded as data for the prototype.
+catalog = [
+("Sienas","Laukakmeņu mūrēšanas darbi","St",21.78),
+("Sienas","Veco ķieģeļu mūrēšana - mākslinieciskā mūrēšana","St",21.78),
+("Sienas","Daļējs sienas apmetums","m²",9.08),
+("Sienas","Visas sienas apmetums (rokas darbs)","m²",10.29),
+("Sienas","Plaisu apstrāde","t/m",4.33),
+("Sienas","Gruntēšana","m²",4.24),
+("Sienas","Vecās apdares noņemšana, tapetes, krāsa utt.","m²",4.60),
+("Sienas","Sienas špaktelēšana","m²",12.64),
+("Sienas","Špaktelēšana priekš LED apgaismojumam","m²",19.30),
+("Sienas","Slīpēšana","m²",4.20),
+("Sienas","Stiklašķiedras sieta uzlīmēšana","m²",5.08),
+("Sienas","Dekoratīva krāsošana ar venecianka imitācijas krāsām","m²",19.36),
+("Sienas","Krāsošana 2 kārtās","m²",8.23),
+("Sienas","Lamināta līmēšana uz sienām","m²",14.52),
+("Sienas","Stūru uzstādīšana (iekšējais un ārējais)","gab",4.69),
+("Sienas","Vinila tapešu līmēšana","m²",9.37),
+("Sienas","Stiklšķiedras tapešu līmēšana","m²",11.93),
+("Sienas","PVC plēves līmēšana","m²",20.68),
+("Sienas","Šķidro tapešu uzklāšana","m²",12.29),
+("Sienas","Foto tapešu līmēšana","m²",20.76),
+("Sienas","Šķidro tapešu apdare ar aizsarglaku","m²",7.87),
+("Sienas","OSB3 plāksnes montāža (sienas)","m²",10.29),
+("Sienas","Reģipša līmēšana uz sienām","m²",11.31),
+("Sienas","Ģipškartona montāža (bez profiliem)","m²",3.99),
+("Sienas","Metāla karkasa izveide ģipškartonam","m²",11.18),
+("Sienas","Reģipša arkas izveide līdz 1600mm","m²",186.34),
+("Sienas","LED karnīze no reģipša ar krāsošanu","m²",39.93),
+("Sienas","Dekoratīvā kārba no ģipškartona","m²",35.91),
+("Sienas","Gipškartona starpsienu izveide","m²",21.18),
+("Sienas","Ķieģeļu starpsienas mūrēšana","m²",42.59),
+("Sienas","Koka latojuma izbūve","m²",11.79),
+("Sienas","Spundēto dēļu apšuvums sienām","m²",17.55),
+("Sienas","Spundēto dēļu apšuvuma krāsošana 2 reizes","m²",9.98),
+("Sienas","Sienu flīzēšana","m²",33.88),
+("Sienas","Grīdlīstes izgatavošana no flīzēm","m²",11.86),
+("Griesti","Vecās apdares noņemšana, tapetes, krāsa utt.","m²",5.46),
+("Griesti","Daļējs apmetums","m²",15.00),
+("Griesti","Apmetums","m²",16.55),
+("Griesti","Plaisu apstrāde","t/m",4.66),
+("Griesti","Stiklašķiedras sieta uzlīmēšana","m²",6.66),
+("Griesti","Špakteļošanas darbi","m²",14.91),
+("Griesti","Slīpēšana","m²",4.66),
+("Griesti","Gruntēšana","m²",4.84),
+("Griesti","Krāsošana 2 kārtās","m²",9.08),
+("Griesti","Tapešu līmēšana","m²",11.98),
+("Griesti","Griestu balsināšana","m²",8.65),
+("Griesti","Piekaramie griesti (Armstrong)","m²",16.94),
+("Griesti","Iestiepto griestu montāža","m²",29.28),
+("Griesti","Gipškartona daudzlīmeņu griestu ierīkošana ar metāla karkasu","m²",34.61),
+("Griesti","Aizkaru nišas izveide no reģipša + krāsošana","t/m",33.54),
+("Griesti","Gipškartona griestu ierīkošana ar metāla karkasu","m²",17.76),
+("Griesti","Griestu līstes montāža","t/m",7.32),
+("Griesti","Dekoratīvo plākšņu montāža","m²",9.79),
+("Griesti","Ģipša dekoratīvo elementu uzstādīšana","t/m",37.27),
+("Griesti","Koka latojuma izbūve (griesti)","m²",10.91),
+("Griesti","Griestu apšūšana ar spundētajiem dēļiem","m²",20.33),
+("Griesti","Spundēto dēļu apšuvuma krāsošana 2 reizes","m²",10.65),
+("Griesti","OSB3 plāksnes montāža (griesti)","m²",11.50),
+("Grīda","Grīdas koka konstrukcijas izlīdzināšana","m²",9.05),
+("Grīda","Vecās apdares noņemšana - linolejs, krāsa utt.","m²",4.11),
+("Grīda","Betona grīdas līdz 5cm ar armēšanu (siltām grīdām)","m²",14.52),
+("Grīda","Pašizlīdzinošo grīdu ierīkošana, sagatavošana, gruntēšana, ieliešana","m²",8.65),
+("Grīda","Hidroizolācijas darbi","m²",7.32),
+("Grīda","Hidroizolācijas darbi ar stiklšķiedra-hidroizolu","m²",9.79),
+("Grīda","Siltās grīdas ierīkošana","m²",19.36),
+("Grīda","OSB3 plāksnes montāža (grīda)","m²",18.63),
+("Grīda","Ūdensizturīgs finieris (montāžas darbi)","m²",18.63),
+("Grīda","Trīsslāņu vairogparketa ieklāšana","m²",24.47),
+("Grīda","Lamināta apakšklāja ieklāšana","m²",1.09),
+("Grīda","Lamināta ieklāšana","m²",10.89),
+("Grīda","Parketa dēlīšu grīdas ieklāšana","m²",37.27),
+("Grīda","Koka grīdas špaktelēšana un slīpēšana","m²",20.57),
+("Grīda","Parketa lakošana, 3 kārtas","m²",15.55),
+("Grīda","Linoleja un mīksto grīdas segumu ieklāšana","m²",11.50),
+("Grīda","Grīdas flīzēšana","m²",38.72),
+("Grīda","Starpistabas sliekšņu uzstādīšana","t/m",11.86),
+("Grīda","Grīdlīstes montāža (PVC)","t/m",7.32),
+("Grīda","Grīdlīstes uzstādīšana (koka)","t/m",11.31),
+("Elektroinstalācija","Vadu kanālu štrobēšana, kabeļu ieguldīšana un kanālu aizpildīšana","t/m",5.99),
+("Elektroinstalācija","Kabeļu ieguldīšana (bez štrobēšanas)","t/m",3.03),
+("Elektroinstalācija","LED lentes montāža","t/m",21.78),
+("Elektroinstalācija","Jauna elektrības punkta ierīkošana","kompl",19.97),
+("Elektroinstalācija","Rozetes vai slēdža nomaiņa esošā vietā","kompl",11.50),
+("Elektroinstalācija","Gaismas ķermeņa montāža (piekaramajos griestos)","kompl",18.15),
+("Elektroinstalācija","Interneta, TV, telefona u.c. vadu instalācija","t/m",3.03),
+("Elektroinstalācija","Lustras/gaismekļa uzstādīšana un pieslēgšana","kompl",39.93),
+("Elektroinstalācija","Elektrisko dvieļu žāvētāja montāža","kompl",57.48),
+("Elektroinstalācija","Iebūvēto gaismas ķermeņu uzstādīšana","kompl",14.52),
+("Elektroinstalācija","Sadales skapja uzstādīšana un pieslēgšana","kompl",346.06),
+("Santehnika","Duškabīnes demontāža","kompl",18.15),
+("Santehnika","Vecās santehnikas demontāža","gab",14.52),
+("Santehnika","Kanalizācijas stāvvadu montāža","t/m",29.68),
+("Santehnika","Ūdens cauruļu ierīkošana","t/m",11.45),
+("Santehnika","Dvieļu žāvētāja maiņa","gab",181.50),
+("Santehnika","Vannas uzstādīšana + pieslēgšana","kompl",217.80),
+("Santehnika","Duškabīnes ar paliktni uzstādīšana","kompl",302.50),
+("Santehnika","Piekaramā tualetes poda uzstādīšana","kompl",199.65),
+("Santehnika","WC poda ar skalojamo kasti montāža","kompl",121.00),
+("Santehnika","Dušas trapa uzstādīšana","kompl",159.72),
+("Santehnika","Sienas gāzes katla uzstādīšana","kompl",653.40),
+("Santehnika","Roku mazgātnes montāža (izlietne, kāja, sifons)","kompl",108.90),
+("Santehnika","Jaucējkrāna montāža","kompl",35.27),
+("Santehnika","Cauruļu montāža","t/m",9.05),
+("Santehnika","Apkures radiatoru nomaiņa montāža/demontāža","kompl",146.41),
+("Santehnika","Veco flīžu noņemšana","m²",10.65),
+("Logi un durvis","Iekšdurvju montāža","kompl",121.00),
+("Logi un durvis","Durvju demontāža","gab",16.64),
+("Logi un durvis","Durvju un logu renovācija","kompl",346.06),
+("Logi un durvis","PVC logu uzstādīšana","m²",42.35),
+("Logi un durvis","Apmaļu uzstādīšana durvīm","t/m",6.46),
+("Logi un durvis","Palodžu uzstādīšana","t/m",13.04),
+("Logi un durvis","Logu aiļu apdare","t/m",16.46),
+("Sadzīves tehnika","Veļas mašīnas uzstādīšana","kompl",54.45),
+("Sadzīves tehnika","Boilera uzstādīšana","kompl",157.30),
+("Sadzīves tehnika","Trauku mazgāšanas mašīnas uzstādīšana un pieslēgšana","kompl",93.17),
+("Sadzīves tehnika","Tvaika nosūcēja montāža","kompl",73.21),
+("Demontāža","Ģipškartona demontāža","m²",2.11),
+("Demontāža","Ģipškartona starpsienas demontāža","m²",4.90),
+("Demontāža","Sienu demontāža (ķieģeļi, gāzbetons, keramzīta bloki)","m³",42.35),
+("Demontāža","Koka konstrukciju demontāža","m³",31.46),
+("Demontāža","Betona sienu, pamatu demontāža","m³",96.80),
+("Demontāža","Darbs ar grunti, izlīdzināšana pēc demontāžas","m³",11.50),
+("Demontāža","Būvgružu iznēšana","m³",17.18),
+("Mēbeles","Meistara izbraukšana uz mērījumiem","gab",53.24),
+("Mēbeles","Virtuves mēbeļu projektu izstrāde","kompl",186.34),
+("Mēbeles","Zīmējumu izstrāde bīdāmajam skapim","kompl",106.48),
+("Mēbeles","Moduļu virtuves mēbeļu montāža (apakšējā rinda)","t/m",266.20),
+("Pamati","Sagatavošanas darbi, zemes darbi, pamatu nospraušana","m²",3.19),
+("Pamati","Zemes rakšana ar traktortehniku pamatiem","stunda",61.23),
+("Pamati","Zemes darbi (roku darbs)","m³",55.90),
+("Pamati","Šķembu pabēršana zem pamatiem un grīdām","m²",4.79),
+("Pamati","Pamatnes-pēdas sagatavošana","t/m",7.99),
+("Pamati","Veidņu izgatavošana, armatūras uzstādīšana, betona ieliešana","m³",193.60),
+("Pamati","Veidņu uzstādīšana un noņemšana no pamatu pēdas","t/m",12.95),
+("Pamati","Gatavo veidņu montāža (PERI/DOKA)","m²",14.52),
+("Pamati","Veidņu izgatavošana no dēļiem, finiera","m²",17.30),
+("Pamati","Armatūras uzstādīšana, betona ieliešana","m³",78.65),
+("Pamati","Horizontālā pamatu hidroizolācija","m²",7.50),
+("Pamati","Pamatu vertikālā un horizontālā hidroizolācija","m²",7.02),
+("Pamati","Pamatu siltināšana","m²",10.29),
+("Pamati","Izlīdzinošā monolītā betona josla uz pamatiem","t/m",21.78),
+("Pamati","Pamatu bloku uzstādīšana","gab",21.78),
+("Pamati","Pamatu izveide no FIBO/KIWI blokiem 5MPa","m³",118.58),
+("Pamati","Monolītie aizbetonējumi starp pamatu blokiem","m³",132.43),
+("Pamati","Pārseguma paneļu uzstādīšana","gab",54.45),
+("Pamati","Betona elementu griešana","t/m",21.96),
+("Pamati","Tehnisko caurumu izgatavošana","gab",96.80),
+("Pamati","Monolīta pārseguma izveide ar armēšanu","m²",33.28),
+("Pamati","Monolītie betona pamati zem stabiem","gab",78.65),
+("Pamati","Pakāpienu betonēšana (līdz 2,5m garumā)","gab",199.65),
+("Sienas","Sastatņu uzstādīšana","m²",5.45),
+("Sienas","Ventilācijas kanāla-dūmvada izgatavošana","kanāls/t-m",108.90),
+("Sienas","Kokšķiedras plāksnes montāža","m²",7.87),
+("Sienas","Kokšķiedras plāksnes montāža (griesti)","m²",8.47),
+("Sienas","Tvaika izolācijas ieklāšana","m²",3.03),
+("Sienas","SANDWICH paneļi ar metāla karkasa izveidi","m²",34.49),
+("Sienas","Monolītās betona sienas izbūve","m³",217.80),
+("Sienas","Monolītās betona sienas slīpēšana","m²",19.36),
+("Sienas","Ailu pārsedzes izgatavošana no monolītā betona","t/m",46.59),
+("Sienas","Ailu pārsedzes montāža","gab",30.25),
+("Sienas","Izlīdzinošās monolītās betona joslas izveidošana ar siltināšanu","t/m",30.25),
+("Sienas","Nesošās kolonnas izgatavošana","t/m",38.72),
+("Sienas","Nesošās kolonnas montāža","gab",108.90),
+("Sienas","Tehnisko kanālu urbšana betonā","gab",108.90),
+("Sienas","Metāla siju uzstādīšana","t",786.50),
+("Sienas","Metināšanas darbi","stunda",25.29),
+("Terase","Terases dēļu montāža (līnijas)","m²",26.62),
+("Terase","Terases dēļu montāža (eglīte)","m²",30.25),
+("Terase","Koka karkasa nojumes būvniecība","m²",219.62),
+("Terase","Koka margas izgatavošana","t/m",145.20),
+("Terase","Koka stabu montāža","gab",96.80),
+("Terase","Guļbaļķu sienas izbūve","m²",54.45),
+("Terase","Guļbūves logu vai durvju ailes izveide","m²",10.65),
+("Terase","Guļbaļķu sienas slīpēšana","m²",16.34),
+("Terase","Guļbūves sienas apstrāde ar lineļļu","m²",9.68),
+("Terase","Guļbūves sienas balināšana","m²",4.84),
+("Jumts","Šīfera demontāža bez utilizācijas","m²",7.87),
+("Jumts","Jumtu siltumizolācija ar kokšķiedras paneļiem","m²",7.50),
+("Jumts","Mūrlatas uzstādīšana","t/m",17.18),
+("Jumts","Jumta koka konstrukciju (spāres) montāža","m²",26.62),
+("Jumts","Cirtainu jumta spāru izgatavošana","gab",41.14),
+("Jumts","Pretkondensāta plēves ieklāšana","m²",4.24),
+("Jumts","Latojums","m²",9.08),
+("Jumts","OSB plāksnes montāža","m²",10.29),
+("Jumts","Uzklāt kausējamo ruberoīdu (2 kārtas)","m²",14.52),
+("Jumts","Bitumeņa apakšklāja ieklāšana","m²",4.84),
+("Jumts","Bitumeņa dakstiņu montāža","m²",11.13),
+("Jumts","Skaidu jumtu klāšana","m²",21.78),
+("Jumts","Metāla dakstiņu montāža","m²",12.71),
+("Jumts","Māla vai polimēra dakstiņu montāža","m²",21.78),
+("Jumts","Valcprofila montāža","m²",16.94),
+("Jumts","Bezasbesta šīfera montāža","m²",11.13),
+("Jumts","Jumta logu montāža VELUX/FAKRO","gab",199.65),
+("Jumts","Sniega barjeras montāža","t/m",22.99),
+("Jumts","Ūdens noteksistēmas uzstādīšana","t/m",10.29),
+("Jumts","Dūmvadu apdare","gab",169.40),
+("Jumts","Jumta pakāpienu uzstādīšana","gab",19.97),
+("Jumts","Ventilācijas kanālu uzstādīšana (deflektors)","gab",50.58),
+("Jumts","Zibensnovedēja uzstādīšana","t/m",7.62),
+("Jumts","Jumta vējmalas uzstādīšana","gab",7.87),
+("Jumts","Skārda lāseņa uzstādīšana","t/m",7.87),
+("Jumts","Jumta kores montāža","t/m",8.71),
+("Jumts","Dūmvada mūrēšana ar šuvju izšuvošanu","t/m / kanālam",242.00),
+("Jumts","Jumta siltināšana - mansarda","m²",10.65),
+("Fasāde","Putupolistirola montāža","m²",11.86),
+("Fasāde","Akmens vates montāža","m²",13.31),
+("Fasāde","CEWOOD paneļu montāža","m²",12.34),
+("Fasāde","Profilu ar sietu montāža uz fasādes","t/m",5.45),
+("Fasāde","Zemapmetuma stikla šķiedras sieta līmēšana - armēšana","m²",10.29),
+("Fasāde","Gruntēšana ar kvarca grunti","m²",4.84),
+("Fasāde","Dekoratīvais apmetums","m²",11.50),
+("Fasāde","Fasādes špaktelēšana","m²",17.67),
+("Fasāde","Loga ailes apdare","t/m",19.97),
+("Fasāde","Dekoratīvo elementu montāža","t/m",21.78),
+("Fasāde","Fasādes apdare ar dekoratīvajām ķieģeļflīzēm","m²",42.35),
+("Fasāde","Fasādes apmūrēšana ar ķieģeli ar šuvju izšuvošanu","m²",78.65),
+("Fasāde","Fasādes krāsošana 2 kārtās","m²",9.92),
+("Fasāde","Ventilējamās fasādes ar spundēto dēļu apdari","m²",31.46),
+("Fasāde","Sendviča paneļi (montāžas darbi)","m²",14.52),
+("Fasāde","Apdare ar plastikāta dēļiem SAIDINGS","m²",13.92),
+("Fasāde","Apdares dēļu BLOCKHOUSE montāža","m²",18.15),
+("Fasāde","Vecās dekoratīvās apdares renovācija, daļēja","m²",22.26),
+("Fasāde","Vēja kārbas karkasa izveide","t/m",12.71),
+("Fasāde","Vēja kārbas apdare ar spundētiem dēļiem + 2 kārtas krāsošana","t/m",17.97),
+("Fasāde","Vēja kārbas apdare ar PVC SAIDING dēļiem","t/m",16.64),
+("Fasāde","Cokola apdare ar dolomītu","m²",35.94),
+("Fasāde","Cokola apdare ar minerīta plātnēm","m²",15.13),
+("Labiekārtošana","Vecās bruģa klājuma demontāža","m²",6.66),
+("Labiekārtošana","Zemes rakšana ar rokām celiņu izveidošanai","m²",6.66),
+("Labiekārtošana","Šķembu vai sīkšķembu pabēršana un blietēšana","m²",7.87),
+("Labiekārtošana","Bruģa ieklāšana","m²",18.15),
+("Labiekārtošana","Trotuāra plāksnes ieklāšana","m²",12.10),
+("Labiekārtošana","Trotuāra apmales uzstādīšana","m",11.50),
+("Labiekārtošana","Pakāpienu izgatavošana no bruģa","t/m",35.09),
+("Labiekārtošana","Zemes līdzināšana + traktortehnikas pakalpojumi","stunda",51.91),
+("Labiekārtošana","Melnzemes blīvēšana","m²",5.99),
+("Labiekārtošana","Zāles stādīšana","m²",2.66),
+("Labiekārtošana","Ģeotekstila ieklāšana","m²",4.24),
+("Labiekārtošana","Koku stādīšana","gab",26.62),
+("Žogs","Gatavu betona žoga stabu uzstādīšana (betonēšana)","gab",36.30),
+("Žogs","Pasētas posma uzstādīšana","gab",18.15),
+("Žogs","Gatava žoga posma uzstādīšana","t/m",22.99),
+("Žogs","Koka žoga izgatavošana no dēļiem","m²",42.35),
+("Žogs","Metāla stabu uzstādīšana","gab",19.36),
+("Žogs","Žoga sieta montāža","t/m",6.66),
+("Žogs","Vārtu uzstādīšana mašīnas iebraukšanai","gab",314.60),
+("Žogs","Gājēju vārtu uzstādīšana","gab",193.60),
+("Žogs","Monolītā betona pamatu izveide ķieģeļu žogam","t/m",33.88),
+("Komunikācijas","Drenāžas sistēmas ieklāšana","t/m",38.72),
+("Komunikācijas","Kanalizācijas septika uzstādīšana","kompl",786.50),
+("Komunikācijas","Revīzijas akas uzstādīšana","kompl",145.20),
+("Komunikācijas","Elektriskā kabeļa ieguldīšana ne vairāk kā 90cm dziļumā","t/m",11.50),
+("Komunikācijas","Būvgružu iznēšana","m³",17.18),
+]
+data = json.dumps([{"cat":c,"name":n,"unit":u,"price":p} for c,n,u,p in catalog], ensure_ascii=False)
+
+html = r'''<!doctype html>
 <html lang="lv">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CraftMate - AS Craft SIA & Aleksandrs Sjomkins</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .blueprint-bg {
-      background-color: #0f172a;
-      background-image: 
-        linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-  </style>
-</head>
-<body class="blueprint-bg text-slate-100 font-sans min-h-screen">
-  <div id="root"></div>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BūvePro — ātrā tāme</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f5f7;color:#171717}
+header{background:#111;color:#fff;padding:18px;position:sticky;top:0;z-index:10}h1{margin:0;font-size:22px}header small{opacity:.7}
+main{max-width:1100px;margin:auto;padding:14px}.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #0000000d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}label{display:block;font-size:12px;color:#666;margin-bottom:5px}
+input,select,button{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;font-size:15px}button{background:#111;color:white;border:0;cursor:pointer}button.gray{background:#eee;color:#111}
+h2{margin:0 0 12px;font-size:18px}.line{display:grid;grid-template-columns:1fr 90px 105px 115px 42px;gap:7px;align-items:center;border-bottom:1px solid #eee;padding:9px 0}.line input{padding:8px}
+.muted{color:#777;font-size:13px}.badge{background:#eee;border-radius:8px;padding:3px 6px;font-size:11px}
+.summary{display:grid;grid-template-columns:1fr auto;gap:8px}.big{font-size:25px}.note{background:#fff8df;padding:10px;border-radius:10px;font-size:13px}
+@media(max-width:650px){.line{grid-template-columns:1fr 68px 78px 90px 35px}.line .name{font-size:13px}}
+@media print{header{position:static}.card:not(#estimate){display:none}body{background:#fff}}
+</style></head>
+<body>
+<header><h1>🏗️ BūvePro — Ātrā tāme</h1><small>Cenas bez PVN • bāzes cenas no 30 m² • maziem apjomiem +25–30%</small></header>
+<main>
+<section class="card" id="estimate">
+<h2>Objekts</h2><div class="grid">
+<div><label>Objekta nosaukums</label><input id="project" placeholder="Piem. Dzīvoklis Berģos"></div>
+<div><label>Klients</label><input id="client" placeholder="Vārds / uzņēmums"></div>
+<div><label>PVN %</label><input id="vat" type="number" value="21" oninput="calc()"></div>
+<div><label>Maza apjoma piemaksa</label><select id="smallPct"><option value="0">Neizmantot automātiski</option><option value="25">+25%</option><option value="30">+30%</option></select></div>
+</div>
+</section>
+<section class="card">
+<h2>Pievienot darbu</h2><div class="grid">
+<div><label>Kategorija</label><select id="cat"></select></div>
+<div><label>Darbs</label><select id="work"></select></div>
+<div><label>Apjoms</label><input id="qty" type="number" value="1" step="0.01"></div>
+<div><label>Individuālā cena €</label><input id="custom" type="number" step="0.01" placeholder="Pēc izvēles"></div>
+<div style="align-self:end"><button onclick="add()">+ Pievienot</button></div>
+</div>
+</section>
+<section class="card"><h2>Darbu pozīcijas</h2><div id="rows" class="muted">Vēl nav pievienotu darbu.</div></section>
+<section class="card">
+<h2>Papildu izmaksas</h2><div class="grid">
+<div><label>Materiāli €</label><input id="materials" type="number" value="0" oninput="calc()"></div>
+<div><label>Mehānismi / instrumentu nolietojums €</label><input id="tools" type="number" value="0" oninput="calc()"></div>
+<div><label>Transports / degviela €</label><input id="transport" type="number" value="0" oninput="calc()"></div>
+<div><label>Utilizācija €</label><input id="waste" type="number" value="0" oninput="calc()"></div>
+<div><label>Uzraudzība €</label><input id="supervision" type="number" value="0" oninput="calc()"></div>
+<div><label>Sociālās izmaksas %</label><input id="social" type="number" value="0" oninput="calc()"></div>
+</div>
+</section>
+<section class="card">
+<h2>Kopsavilkums</h2><div class="summary">
+<span>Darbi</span><b id="works">0.00 €</b>
+<span>Sociālās izmaksas</span><b id="soc">0.00 €</b>
+<span>Papildu izmaksas</span><b id="extra">0.00 €</b>
+<span>Summa bez PVN</span><b id="net">0.00 €</b>
+<span>PVN</span><b id="vatout">0.00 €</b>
+<span>KOPĀ KLIENTAM</span><b id="gross" class="big">0.00 €</b>
+</div><br>
+<div class="note">Piezīme: cenu katalogā bāzes apjoma cenas ir paredzētas no 30 m². Šajā prototipā maza apjoma piemaksa tiek piemērota tikai m² pozīcijām, ja apjoms ir mazāks par 30 m².</div><br>
+<div class="grid"><button onclick="window.print()">🖨️ Drukāt / PDF</button><button class="gray" onclick="clearAll()">Notīrīt tāmi</button></div>
+</section>
+</main>
+<script>
+const DATA=__DATA__;
+let rows=[];
+const cats=[...new Set(DATA.map(x=>x.cat))];
+const cat=document.getElementById('cat'),work=document.getElementById('work');
+cat.innerHTML=cats.map(x=>`<option>${x}</option>`).join('');
+function fill(){let a=DATA.filter(x=>x.cat===cat.value);work.innerHTML=a.map(x=>`<option value="${DATA.indexOf(x)}">${x.name} — ${x.price.toFixed(2)} €/${x.unit}</option>`).join('')}
+cat.onchange=fill;fill();
+function add(){let x=DATA[+work.value],q=+document.getElementById('qty').value||0,cp=+document.getElementById('custom').value;rows.push({...x,qty:q,price:Number.isFinite(cp)&&cp>0?cp:x.price});document.getElementById('custom').value='';render()}
+function del(i){rows.splice(i,1);render()}
+function render(){let e=document.getElementById('rows');if(!rows.length){e.innerHTML='Vēl nav pievienotu darbu.';calc();return}
+e.innerHTML=rows.map((r,i)=>`<div class="line"><div class="name"><b>${r.name}</b><br><span class="badge">${r.cat}</span> <span class="muted">${r.unit}</span></div><input type="number" value="${r.qty}" step=".01" onchange="rows[${i}].qty=+this.value||0;calc()"><input type="number" value="${r.price}" step=".01" onchange="rows[${i}].price=+this.value||0;calc()"><b>${(r.qty*r.price).toFixed(2)} €</b><button class="gray" onclick="del(${i})">×</button></div>`).join('');calc()}
+function calc(){let pct=+document.getElementById('smallPct').value||0;let works=rows.reduce((s,r)=>{let p=r.price;if(pct&&r.unit==='m²'&&r.qty<30)p*=1+pct/100;return s+r.qty*p},0);
+let soc=works*(+document.getElementById('social').value||0)/100;
+let extra=['materials','tools','transport','waste','supervision'].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
+let net=works+soc+extra,vat=net*(+document.getElementById('vat').value||0)/100,gross=net+vat;
+worksOut.textContent=works.toFixed(2)+' €';socOut.textContent=soc.toFixed(2)+' €';extraOut.textContent=extra.toFixed(2)+' €';netOut.textContent=net.toFixed(2)+' €';vatOut.textContent=vat.toFixed(2)+' €';grossOut.textContent=gross.toFixed(2)+' €'}
+const worksOut=document.getElementById('works'),socOut=document.getElementById('soc'),extraOut=document.getElementById('extra'),netOut=document.getElementById('net'),vatOut=document.getElementById('vatout'),grossOut=document.getElementById('gross');
+function clearAll(){rows=[];render();['materials','tools','transport','waste','supervision','social'].forEach(id=>document.getElementById(id).value=0)}
+</script></body></html>'''
+html = html.replace("__DATA__", data)
 
-  <script type="text/babel">
-    const { useState } = React;
-
-    const MASTER_SERVICES = [
-      // SIENAS
-      { id: 's1', cat: 'Sienas', name: 'Laukakmeņu mūrēšanas darbi', price: 21.78, unit: 'St' },
-      { id: 's2', cat: 'Sienas', name: 'Veco ķieģeļu mūrēšana - mākslinieciskā', price: 21.78, unit: 'St' },
-      { id: 's3', cat: 'Sienas', name: 'Daļējs sienas apmetums', price: 9.08, unit: 'm²' },
-      { id: 's4', cat: 'Sienas', name: 'Visas sienas apmetums (rokas darbs)', price: 10.29, unit: 'm²' },
-      { id: 's5', cat: 'Sienas', name: 'Plaisu apstrāde', price: 4.33, unit: 't/m' },
-      { id: 's6', cat: 'Sienas', name: 'Gruntēšana', price: 4.24, unit: 'm²' },
-      { id: 's7', cat: 'Sienas', name: 'Vecās apdares noņemšana (tapetes, krāsa)', price: 4.60, unit: 'm²' },
-      { id: 's8', cat: 'Sienas', name: 'Sienas špaktelēšana', price: 12.64, unit: 'm²' },
-      { id: 's9', cat: 'Sienas', name: 'Špaktelēšana priekš LED apgaismojumam', price: 19.30, unit: 'm²' },
-      { id: 's10', cat: 'Sienas', name: 'Slīpēšana', price: 4.20, unit: 'm²' },
-      { id: 's11', cat: 'Sienas', name: 'Stiklašķiedras sieta uzlīmēšana', price: 5.08, unit: 'm²' },
-      { id: 's12', cat: 'Sienas', name: 'Dekoratīva krāsošana (venecianka)', price: 19.36, unit: 'm²' },
-      { id: 's13', cat: 'Sienas', name: 'Krāsošana 2 kārtās', price: 8.23, unit: 'm²' },
-      { id: 's14', cat: 'Sienas', name: 'Lamināta līmēšana uz sienām', price: 14.52, unit: 'm²' },
-      { id: 's15', cat: 'Sienas', name: 'Stūru uzstādīšana (iekšējais/ārējais)', price: 4.69, unit: 'gab' },
-      { id: 's16', cat: 'Sienas', name: 'Vinila tapešu līmēšana', price: 9.37, unit: 'm²' },
-      { id: 's17', cat: 'Sienas', name: 'Stiklšķiedras tapešu līmēšana', price: 11.93, unit: 'm²' },
-      { id: 's22', cat: 'Sienas', name: 'OSB3 plāksnes montāža (sienas)', price: 10.29, unit: 'm²' },
-      { id: 's23', cat: 'Sienas', name: 'Reģipša līmēšana uz sienām', price: 11.31, unit: 'm²' },
-      { id: 's25', cat: 'Sienas', name: 'Metāla karkasa izveide ģipškartonam', price: 11.18, unit: 'm²' },
-      { id: 's29', cat: 'Sienas', name: 'Ģipškartona starpsienu izveide', price: 21.18, unit: 'm²' },
-      { id: 's34', cat: 'Sienas', name: 'Sienu flīzēšana', price: 33.88, unit: 'm²' },
-
-      // GRIESTI
-      { id: 'g1', cat: 'Griesti', name: 'Vecās apdares noņemšana (griesti)', price: 5.46, unit: 'm²' },
-      { id: 'g2', cat: 'Griesti', name: 'Daļējs griestu apmetums', price: 15.00, unit: 'm²' },
-      { id: 'g3', cat: 'Griesti', name: 'Griestu apmetums', price: 16.55, unit: 'm²' },
-      { id: 'g6', cat: 'Griesti', name: 'Griestu špaktelēšana', price: 14.91, unit: 'm²' },
-      { id: 'g7', cat: 'Griesti', name: 'Griestu slīpēšana', price: 4.66, unit: 'm²' },
-      { id: 'g8', cat: 'Griesti', name: 'Griestu gruntēšana', price: 4.84, unit: 'm²' },
-      { id: 'g9', cat: 'Griesti', name: 'Griestu krāsošana 2 kārtās', price: 9.08, unit: 'm²' },
-      { id: 'g12', cat: 'Griesti', name: 'Piekaramie griesti (Armstrong)', price: 16.94, unit: 'm²' },
-      { id: 'g13', cat: 'Griesti', name: 'Iestiepto griestu montāža', price: 29.28, unit: 'm²' },
-      { id: 'g16', cat: 'Griesti', name: 'Ģipškartona griesti ar metāla karkasu', price: 17.76, unit: 'm²' },
-      { id: 'pol1', cat: 'Griesti', name: 'Poliuretāna karnīzes montāža', price: 21.00, unit: 't/m' },
-
-      // GRĪDA
-      { id: 'est1', cat: 'Grīda', name: 'Estrich grīdas ierīkošana līdz 8cm biezumam', price: 19.36, unit: 'm²' },
-      { id: 'gr1', cat: 'Grīda', name: 'Grīdas koka konstrukcijas izlīdzināšana', price: 9.05, unit: 'm²' },
-      { id: 'gr3', cat: 'Grīda', name: 'Betona grīda līdz 5cm ar armēšanu', price: 14.52, unit: 'm²' },
-      { id: 'gr4', cat: 'Grīda', name: 'Pašizlīdzinošā grīda', price: 8.65, unit: 'm²' },
-      { id: 'gr5', cat: 'Grīda', name: 'Grīdas hidroizolācija', price: 7.32, unit: 'm²' },
-      { id: 'gr7', cat: 'Grīda', name: 'Siltās grīdas ierīkošana', price: 19.36, unit: 'm²' },
-      { id: 'gr8', cat: 'Grīda', name: 'OSB3 plāksnes montāža (grīda)', price: 18.63, unit: 'm²' },
-      { id: 'gr12', cat: 'Grīda', name: 'Lamināta ieklāšana', price: 10.89, unit: 'm²' },
-      { id: 'gr14', cat: 'Grīda', name: 'Grīdas flīzēšana', price: 38.72, unit: 'm²' },
-      { id: 'pol2', cat: 'Grīda', name: 'Poliuretāna grīdlīstes montāža', price: 17.00, unit: 't/m' },
-
-      // SANTEHNIKA
-      { id: 'san1', cat: 'Santehnika', name: 'Duškabīnes demontāža', price: 18.15, unit: 'kompl' },
-      { id: 'san3', cat: 'Santehnika', name: 'Kanalizācijas stāvvadu montāža', price: 29.68, unit: 't/m' },
-      { id: 'san4', cat: 'Santehnika', name: 'Ūdens cauruļu ierīkošana', price: 11.45, unit: 't/m' },
-      { id: 'san6', cat: 'Santehnika', name: 'Vannas uzstādīšana + pieslēgšana', price: 217.80, unit: 'kompl' },
-      { id: 'san8', cat: 'Santehnika', name: 'Piekaramā tualetes poda uzstādīšana', price: 199.65, unit: 'kompl' },
-
-      // MEHĀNISMI
-      { id: 'm1', cat: 'Mehānismi', name: 'Zemes rakšana ar traktortehniku', price: 61.23, unit: 'Stunda' },
-      { id: 'm2', cat: 'Mehānismi', name: 'Zemes līdzināšana + traktortehnika', price: 51.91, unit: 'Stunda' },
-      { id: 'm3', cat: 'Mehānismi', name: 'Būvgružu izvešana / iznešana', price: 17.18, unit: 'm³' }
-    ];
-
-    const REKVIZITI = {
-      vards: "Aleksandrs Sjomkins",
-      adrese: "Skolas iela 4, Iecava, Bauskas nov., LV-3913",
-      pknr: "11068413308",
-      banka: "A/S \"Swedbank\"",
-      kod: "HABALV22",
-      konts: "LV25HABA0551062884182"
-    };
-
-    function CraftMateApp() {
-      const [activeTab, setActiveTab] = useState('tames');
-      const [taxMode, setTaxMode] = useState('mun');
-      const [searchTerm, setSearchTerm] = useState('');
-      const [activeCategory, setActiveCategory] = useState('Visas');
-
-      // Rediģējamie rēķina lauki
-      const [invoiceNr, setInvoiceNr] = useState('2026-08/01');
-      const [invoiceDate, setInvoiceDate] = useState('2026-08-20');
-      const [dueDate, setDueDate] = useState('2026-08-27');
-
-      const [clients] = useState([
-        { id: 1, name: 'SIA "Ostiopātiskās medicīnas attīstības centrs"', regNr: '40003887484', address: 'Airu iela 39d, Rīga, LV-1015', banka: 'AS Magnetiq bank', konts: 'LV76LAPB0000146058803' },
-        { id: 2, name: 'Jānis Bērziņš (Privātpersona)', regNr: '-', address: 'Brīvības iela 45, Rīga', banka: 'Swedbank', konts: 'LV00HABA1234567890123' }
-      ]);
-
-      const [selectedClient, setSelectedClient] = useState(clients[0]);
-      const [selectedServices, setSelectedServices] = useState([
-        { id: 'est1', qty: 45 },
-        { id: 'pol1', qty: 18 },
-        { id: 'm1', qty: 4 }
-      ]);
-
-      const [tasks, setTasks] = useState([
-        { id: 1, text: 'Saskaņot krāsu toņus objektā', done: true },
-        { id: 2, text: 'Atvest Estrich smiltis un cementu', done: false }
-      ]);
-      const [newTask, setNewTask] = useState('');
-
-      const toggleService = (id) => {
-        if (selectedServices.some(s => s.id === id)) {
-          setSelectedServices(selectedServices.filter(s => s.id !== id));
-        } else {
-          setSelectedServices([...selectedServices, { id, qty: 10 }]);
-        }
-      };
-
-      const updateQty = (id, val) => {
-        const num = Number(val) || 0;
-        setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, qty: num } : s));
-      };
-
-      const categories = ['Visas', 'Sienas', 'Griesti', 'Grīda', 'Santehnika', 'Mehānismi'];
-
-      const filteredServices = MASTER_SERVICES.filter(srv => {
-        const matchesCat = activeCategory === 'Visas' || srv.cat === activeCategory;
-        const matchesSearch = srv.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesCat && matchesSearch;
-      });
-
-      let subtotal = 0;
-      const itemsCalculated = selectedServices.map(sel => {
-        const srv = MASTER_SERVICES.find(m => m.id === sel.id);
-        if (!srv) return null;
-        let price = srv.price;
-        if (srv.unit === 'm²' && sel.qty < 30 && sel.qty > 0) {
-          price = price * 1.275;
-        }
-        const total = price * sel.qty;
-        subtotal += total;
-        return { ...srv, qty: sel.qty, finalPrice: price, total };
-      }).filter(Boolean);
-
-      const vatTotal = taxMode === 'pvn' ? subtotal * 0.21 : 0;
-      const grandTotal = subtotal + vatTotal;
-
-      return (
-        <div class="max-w-2xl mx-auto bg-slate-900/95 text-slate-100 min-h-screen pb-20 border-x border-blue-500/30 shadow-2xl">
-          {/* Header */}
-          <header class="p-4 bg-slate-950 border-b border-blue-500/40 relative overflow-hidden">
-            <div class="flex justify-between items-center relative z-10">
-              <div>
-                <h1 class="text-xl font-black text-amber-500 tracking-wider">AS CRAFT <span class="text-blue-400 font-light">| Engineering</span></h1>
-                <p class="text-xs text-slate-400">Izpildītājs: <span class="text-slate-200 font-bold">{REKVIZITI.vards}</span></p>
-              </div>
-              <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
-                <button onClick={() => setTaxMode('pvn')} class={`px-2 py-1 rounded ${taxMode === 'pvn' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>PVN 21%</button>
-                <button onClick={() => setTaxMode('mun')} class={`px-2 py-1 rounded ${taxMode === 'mun' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Bez PVN</button>
-              </div>
-            </div>
-
-            {/* Navigācijas izvēlne */}
-            <nav class="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-slate-800 text-center text-xs font-semibold">
-              <button onClick={() => setActiveTab('tames')} class={`p-2 rounded ${activeTab === 'tames' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📋 Tāme</button>
-              <button onClick={() => setActiveTab('rekini')} class={`p-2 rounded ${activeTab === 'rekini' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📑 Rēķini</button>
-              <button onClick={() => setActiveTab('klienti')} class={`p-2 rounded ${activeTab === 'klienti' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>👥 Klienti</button>
-              <button onClick={() => setActiveTab('foto')} class={`p-2 rounded ${activeTab === 'foto' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>🖼️ Plāni/Foto</button>
-              <button onClick={() => setActiveTab('uzdevumi')} class={`p-2 rounded ${activeTab === 'uzdevumi' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>✅ Uzdevumi</button>
-            </nav>
-          </header>
-
-          <main class="p-4 space-y-6">
-            {activeTab === 'tames' && (
-              <div class="space-y-4">
-                {/* Kategoriju Filtri un Meklētājs */}
-                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-3">
-                  <input type="text" placeholder="🔍 Meklēt darbu (piem. 'apmetums', 'rakšana')..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-blue-500" />
-                  
-                  <div class="flex gap-1 overflow-x-auto pb-1 text-xs">
-                    {categories.map(cat => (
-                      <button key={cat} onClick={() => setActiveCategory(cat)} class={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all ${activeCategory === cat ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
-                        {cat === 'Sienas' ? '🧱 Sienas' : cat === 'Griesti' ? '🏠 Griesti' : cat === 'Grīda' ? '🪵 Grīda' : cat === 'Santehnika' ? '🚰 Santehnika' : cat === 'Mehānismi' ? '🚜 Mehānismi' : '🌐 Visas'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Katalogs */}
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm flex justify-between items-center">
-                    <span>🛠️ KATALOGS ({activeCategory})</span>
-                    <span class="text-xs text-slate-400 font-normal">Izvēlieties darbus</span>
-                  </h3>
-
-                  <div class="max-h-64 overflow-y-auto space-y-2 pr-1">
-                    {filteredServices.map(srv => {
-                      const isSel = selectedServices.some(s => s.id === srv.id);
-                      return (
-                        <div key={srv.id} onClick={() => toggleService(srv.id)} class={`p-2.5 rounded-lg border text-sm flex items-center justify-between cursor-pointer transition-all ${isSel ? 'bg-amber-500/15 border-amber-500/60 text-amber-300' : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700'}`}>
-                          <div class="flex items-center gap-2">
-                            <span>{isSel ? '✅' : '⬛'}</span>
-                            <div>
-                              <div class="font-medium">{srv.name}</div>
-                              <div class="text-xs text-slate-400">[{srv.cat}] — {srv.price.toFixed(2)} € / {srv.unit}</div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Izvēlēto darbu saraksts */}
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm">📋 TĀMĒ IEKĻAUTIE DARBI</h3>
-                  {itemsCalculated.map(item => (
-                    <div key={item.id} class="bg-slate-900 p-3 rounded border border-slate-800 flex justify-between items-center text-sm">
-                      <div>
-                        <div class="font-medium text-slate-200">{item.name}</div>
-                        <div class="text-xs text-slate-400">{item.finalPrice.toFixed(2)} € / {item.unit}</div>
-                      </div>
-                      <div class="flex items-center gap-3">
-                        <input type="number" value={item.qty} onChange={e => updateQty(item.id, e.target.value)} class="w-16 bg-slate-800 border border-slate-700 rounded p-1 text-center font-bold text-amber-400" />
-                        <span class="font-mono text-amber-400 w-20 text-right">{item.total.toFixed(2)} €</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-500/40 text-right font-mono space-y-1">
-                  <div class="text-xs text-slate-400">Summa (bez PVN): {subtotal.toFixed(2)} €</div>
-                  <div class="text-lg font-bold text-amber-500">KOPĀ APMAKSAI: {grandTotal.toFixed(2)} €</div>
-                </div>
-              </div>
-            )}
-
-            {/* RĒĶINU SADAĻA AR DIENAS UN MĒNEŠA LABOŠANU */}
-            {activeTab === 'rekini' && (
-              <div class="space-y-4">
-                {/* Rēķina iestatījumi (rediģējamie lauki) */}
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
-                  <h3 class="font-bold text-amber-400 text-sm">⚙️ RĒĶINA DATI UN REKVIZĪTI</h3>
-                  <div class="grid grid-cols-3 gap-2">
-                    <div>
-                      <label class="block text-slate-400 mb-1">Rēķina Nr.:</label>
-                      <input type="text" value={invoiceNr} onChange={e => setInvoiceNr(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold" />
-                    </div>
-                    <div>
-                      <label class="block text-slate-400 mb-1">Izrakstīšanas datums:</label>
-                      <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
-                    </div>
-                    <div>
-                      <label class="block text-slate-400 mb-1">Apmaksas termiņš:</label>
-                      <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Oficiālā rēķina izskats (Gatavs drukāšanai) */}
-                <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
-                  <div class="text-center font-bold text-base">
-                    Rēķins Nr.: {invoiceNr}
-                    <div class="text-xs font-normal text-slate-600 mt-0.5">Izrakstīts: {invoiceDate}</div>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-4 text-xs pt-2">
-                    <div>
-                      <strong class="block border-b border-slate-300 pb-1 mb-1">Maksātājs:</strong>
-                      <div>{selectedClient.name}</div>
-                      <div>Adrese: {selectedClient.address}</div>
-                      <div>Rēģ.Nr. {selectedClient.regNr}</div>
-                      <div>Banka: {selectedClient.banka}</div>
-                      <div>Konta Nr. {selectedClient.konts}</div>
-                    </div>
-                    <div>
-                      <strong class="block border-b border-slate-300 pb-1 mb-1">Saņēmējs:</strong>
-                      <div>{REKVIZITI.vards}</div>
-                      <div>Adrese: {REKVIZITI.adrese}</div>
-                      <div>Nod.maks.Nr. {REKVIZITI.pknr}</div>
-                      <div>Banka: {REKVIZITI.banka}</div>
-                      <div>Konta Nr. {REKVIZITI.konts}</div>
-                    </div>
-                  </div>
-
-                  <table class="w-full text-xs border-collapse border border-slate-400 mt-4">
-                    <thead>
-                      <tr class="bg-amber-300">
-                        <th class="border border-slate-400 p-1 text-center">Nr.</th>
-                        <th class="border border-slate-400 p-1 text-left">Nosaukums</th>
-                        <th class="border border-slate-400 p-1 text-center">Mērv.</th>
-                        <th class="border border-slate-400 p-1 text-center">Daudz.</th>
-                        <th class="border border-slate-400 p-1 text-right">Summa EUR</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itemsCalculated.map((it, idx) => (
-                        <tr key={it.id}>
-                          <td class="border border-slate-400 p-1 text-center">{idx + 1}.</td>
-                          <td class="border border-slate-400 p-1">{it.name}</td>
-                          <td class="border border-slate-400 p-1 text-center">{it.unit}</td>
-                          <td class="border border-slate-400 p-1 text-center">{it.qty}</td>
-                          <td class="border border-slate-400 p-1 text-right">{it.total.toFixed(2)} EUR</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td colSpan="4" class="border border-slate-400 p-1 text-right font-bold">Summa apmaksai:</td>
-                        <td class="border border-slate-400 p-1 text-right font-bold">{grandTotal.toFixed(2)} EUR</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  <div class="text-xs font-bold pt-2">
-                    Samaksas termiņš līdz: {dueDate}
-                  </div>
-                  <div class="text-xs italic text-center pt-6 text-slate-600">
-                    Šis rēķins ir sagatavots elektroniski un derīgs bez paraksta
-                  </div>
-
-                  <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2.5 rounded font-sans text-xs font-bold mt-4 shadow hover:bg-slate-800">🖨️ Drukāt vai Saglabāt PDF Rēķinu</button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'klienti' && (
-              <div class="space-y-3">
-                <h3 class="text-amber-500 font-bold text-sm">👥 MANI KLIENTI</h3>
-                {clients.map(c => (
-                  <div key={c.id} onClick={() => setSelectedClient(c)} class={`p-3 rounded-lg border text-sm cursor-pointer ${selectedClient.id === c.id ? 'bg-amber-500/20 border-amber-500' : 'bg-slate-800 border-slate-700'}`}>
-                    <div class="font-bold">{c.name}</div>
-                    <div class="text-xs text-slate-400">{c.address}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'foto' && (
-              <div class="space-y-4 text-center py-6 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/40">
-                <div class="text-4xl">📐</div>
-                <div class="text-sm text-slate-300 font-semibold">Objekta rasējumi, plāni un fotogrāfijas</div>
-                <input type="file" class="hidden" id="fileUp" />
-                <label htmlFor="fileUp" class="inline-block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded cursor-pointer">Pievienot Failu / Foto</label>
-              </div>
-            )}
-
-            {activeTab === 'uzdevumi' && (
-              <div class="space-y-3">
-                <h3 class="text-amber-500 font-bold text-sm">✅ UZDEVUMI</h3>
-                <div class="flex gap-2">
-                  <input type="text" value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Jauns uzdevums..." class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none" />
-                  <button onClick={() => { if(newTask) { setTasks([...tasks, {id: Date.now(), text: newTask, done: false}]); setNewTask(''); } }} class="bg-amber-500 text-slate-950 font-bold px-3 text-xs rounded">Pievienot</button>
-                </div>
-                <div class="space-y-2 pt-2">
-                  {tasks.map(t => (
-                    <div key={t.id} class="flex items-center gap-2 p-2 bg-slate-800/60 rounded border border-slate-700 text-xs">
-                      <input type="checkbox" checked={t.done} onChange={() => setTasks(tasks.map(x => x.id === t.id ? {...x, done: !x.done} : x))} />
-                      <span class={t.done ? 'line-through text-slate-500' : 'text-slate-200'}>{t.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
-      );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<CraftMateApp />);
-  </script>
-</body>
-</html>
+path = Path("/mnt/data/BuvePro_atra_tame.html")
+path.write_text(html, encoding="utf-8")
+print(f"Fails izveidots: {path}")
+print(f"Darbu katalogā: {len(catalog)} pozīcijas")
