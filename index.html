@@ -102,6 +102,11 @@
       const [searchTerm, setSearchTerm] = useState('');
       const [activeCategory, setActiveCategory] = useState('Visas');
 
+      // Rediģējamie rēķina lauki
+      const [invoiceNr, setInvoiceNr] = useState('2026-08/01');
+      const [invoiceDate, setInvoiceDate] = useState('2026-08-20');
+      const [dueDate, setDueDate] = useState('2026-08-27');
+
       const [clients] = useState([
         { id: 1, name: 'SIA "Ostiopātiskās medicīnas attīstības centrs"', regNr: '40003887484', address: 'Airu iela 39d, Rīga, LV-1015', banka: 'AS Magnetiq bank', konts: 'LV76LAPB0000146058803' },
         { id: 2, name: 'Jānis Bērziņš (Privātpersona)', regNr: '-', address: 'Brīvības iela 45, Rīga', banka: 'Swedbank', konts: 'LV00HABA1234567890123' }
@@ -109,9 +114,9 @@
 
       const [selectedClient, setSelectedClient] = useState(clients[0]);
       const [selectedServices, setSelectedServices] = useState([
-        { id: 's8', qty: 30 },
         { id: 'est1', qty: 45 },
-        { id: 'pol1', qty: 18 }
+        { id: 'pol1', qty: 18 },
+        { id: 'm1', qty: 4 }
       ]);
 
       const [tasks, setTasks] = useState([
@@ -147,7 +152,7 @@
         if (!srv) return null;
         let price = srv.price;
         if (srv.unit === 'm²' && sel.qty < 30 && sel.qty > 0) {
-          price = price * 1.275; // Mazo apjomu piemaksa
+          price = price * 1.275;
         }
         const total = price * sel.qty;
         subtotal += total;
@@ -172,7 +177,7 @@
               </div>
             </div>
 
-            {/* Navigācija */}
+            {/* Navigācijas izvēlne */}
             <nav class="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-slate-800 text-center text-xs font-semibold">
               <button onClick={() => setActiveTab('tames')} class={`p-2 rounded ${activeTab === 'tames' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📋 Tāme</button>
               <button onClick={() => setActiveTab('rekini')} class={`p-2 rounded ${activeTab === 'rekini' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📑 Rēķini</button>
@@ -187,9 +192,9 @@
               <div class="space-y-4">
                 {/* Kategoriju Filtri un Meklētājs */}
                 <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-3">
-                  <input type="text" placeholder="🔍 Meklēt darbu (piem. 'apmetums', 'karnīze')..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-blue-500" />
+                  <input type="text" placeholder="🔍 Meklēt darbu (piem. 'apmetums', 'rakšana')..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-blue-500" />
                   
-                  <div class="flex gap-1 overflow-x-auto pb-1 text-xs custom-scrollbar">
+                  <div class="flex gap-1 overflow-x-auto pb-1 text-xs">
                     {categories.map(cat => (
                       <button key={cat} onClick={() => setActiveCategory(cat)} class={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all ${activeCategory === cat ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
                         {cat === 'Sienas' ? '🧱 Sienas' : cat === 'Griesti' ? '🏠 Griesti' : cat === 'Grīda' ? '🪵 Grīda' : cat === 'Santehnika' ? '🚰 Santehnika' : cat === 'Mehānismi' ? '🚜 Mehānismi' : '🌐 Visas'}
@@ -198,11 +203,11 @@
                   </div>
                 </div>
 
-                {/* Katalogs pa pozīcijām */}
+                {/* Katalogs */}
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
                   <h3 class="text-amber-500 font-bold text-sm flex justify-between items-center">
                     <span>🛠️ KATALOGS ({activeCategory})</span>
-                    <span class="text-xs text-slate-400 font-normal">Klikšķiniet lai atķeksētu</span>
+                    <span class="text-xs text-slate-400 font-normal">Izvēlieties darbus</span>
                   </h3>
 
                   <div class="max-h-64 overflow-y-auto space-y-2 pr-1">
@@ -223,7 +228,7 @@
                   </div>
                 </div>
 
-                {/* Izvēlēto darbu aprēķins */}
+                {/* Izvēlēto darbu saraksts */}
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
                   <h3 class="text-amber-500 font-bold text-sm">📋 TĀMĒ IEKĻAUTIE DARBI</h3>
                   {itemsCalculated.map(item => (
@@ -247,25 +252,90 @@
               </div>
             )}
 
-            {/* Rēķini, Klienti, Plāni u.c. */}
+            {/* RĒĶINU SADAĻA AR DIENAS UN MĒNEŠA LABOŠANU */}
             {activeTab === 'rekini' && (
-              <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
-                <div class="text-center font-bold text-base">Rēķins Nr.: 271025</div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                  <div><strong>Maksātājs:</strong><br/>{selectedClient.name}<br/>{selectedClient.address}</div>
-                  <div><strong>Saņēmējs:</strong><br/>{REKVIZITI.vards}<br/>P.K. {REKVIZITI.pknr}<br/>Konta Nr. {REKVIZITI.konts}</div>
+              <div class="space-y-4">
+                {/* Rēķina iestatījumi (rediģējamie lauki) */}
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
+                  <h3 class="font-bold text-amber-400 text-sm">⚙️ RĒĶINA DATI UN REKVIZĪTI</h3>
+                  <div class="grid grid-cols-3 gap-2">
+                    <div>
+                      <label class="block text-slate-400 mb-1">Rēķina Nr.:</label>
+                      <input type="text" value={invoiceNr} onChange={e => setInvoiceNr(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold" />
+                    </div>
+                    <div>
+                      <label class="block text-slate-400 mb-1">Izrakstīšanas datums:</label>
+                      <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
+                    </div>
+                    <div>
+                      <label class="block text-slate-400 mb-1">Apmaksas termiņš:</label>
+                      <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
+                    </div>
+                  </div>
                 </div>
-                <table class="w-full text-xs border-collapse border border-slate-400 mt-4">
-                  <thead><tr class="bg-amber-300"><th class="border p-1">Nr.</th><th class="border p-1 text-left">Nosaukums</th><th class="border p-1">Mērv.</th><th class="border p-1">Daudz.</th><th class="border p-1 text-right">Summa EUR</th></tr></thead>
-                  <tbody>
-                    {itemsCalculated.map((it, idx) => (
-                      <tr key={it.id}><td class="border p-1 text-center">{idx+1}.</td><td class="border p-1">{it.name}</td><td class="border p-1 text-center">{it.unit}</td><td class="border p-1 text-center">{it.qty}</td><td class="border p-1 text-right">{it.total.toFixed(2)} EUR</td></tr>
-                    ))}
-                    <tr><td colSpan="4" class="border p-1 text-right font-bold">Kopā:</td><td class="border p-1 text-right font-bold">{grandTotal.toFixed(2)} EUR</td></tr>
-                  </tbody>
-                </table>
-                <div class="text-xs italic text-center pt-4">Šis rēķins ir sagatavots elektroniski un derīgs bez paraksta</div>
-                <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2 rounded font-sans text-xs font-bold">🖨️ Drukāt / Saglabāt PDF</button>
+
+                {/* Oficiālā rēķina izskats (Gatavs drukāšanai) */}
+                <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
+                  <div class="text-center font-bold text-base">
+                    Rēķins Nr.: {invoiceNr}
+                    <div class="text-xs font-normal text-slate-600 mt-0.5">Izrakstīts: {invoiceDate}</div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4 text-xs pt-2">
+                    <div>
+                      <strong class="block border-b border-slate-300 pb-1 mb-1">Maksātājs:</strong>
+                      <div>{selectedClient.name}</div>
+                      <div>Adrese: {selectedClient.address}</div>
+                      <div>Rēģ.Nr. {selectedClient.regNr}</div>
+                      <div>Banka: {selectedClient.banka}</div>
+                      <div>Konta Nr. {selectedClient.konts}</div>
+                    </div>
+                    <div>
+                      <strong class="block border-b border-slate-300 pb-1 mb-1">Saņēmējs:</strong>
+                      <div>{REKVIZITI.vards}</div>
+                      <div>Adrese: {REKVIZITI.adrese}</div>
+                      <div>Nod.maks.Nr. {REKVIZITI.pknr}</div>
+                      <div>Banka: {REKVIZITI.banka}</div>
+                      <div>Konta Nr. {REKVIZITI.konts}</div>
+                    </div>
+                  </div>
+
+                  <table class="w-full text-xs border-collapse border border-slate-400 mt-4">
+                    <thead>
+                      <tr class="bg-amber-300">
+                        <th class="border border-slate-400 p-1 text-center">Nr.</th>
+                        <th class="border border-slate-400 p-1 text-left">Nosaukums</th>
+                        <th class="border border-slate-400 p-1 text-center">Mērv.</th>
+                        <th class="border border-slate-400 p-1 text-center">Daudz.</th>
+                        <th class="border border-slate-400 p-1 text-right">Summa EUR</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsCalculated.map((it, idx) => (
+                        <tr key={it.id}>
+                          <td class="border border-slate-400 p-1 text-center">{idx + 1}.</td>
+                          <td class="border border-slate-400 p-1">{it.name}</td>
+                          <td class="border border-slate-400 p-1 text-center">{it.unit}</td>
+                          <td class="border border-slate-400 p-1 text-center">{it.qty}</td>
+                          <td class="border border-slate-400 p-1 text-right">{it.total.toFixed(2)} EUR</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td colSpan="4" class="border border-slate-400 p-1 text-right font-bold">Summa apmaksai:</td>
+                        <td class="border border-slate-400 p-1 text-right font-bold">{grandTotal.toFixed(2)} EUR</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="text-xs font-bold pt-2">
+                    Samaksas termiņš līdz: {dueDate}
+                  </div>
+                  <div class="text-xs italic text-center pt-6 text-slate-600">
+                    Šis rēķins ir sagatavots elektroniski un derīgs bez paraksta
+                  </div>
+
+                  <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2.5 rounded font-sans text-xs font-bold mt-4 shadow hover:bg-slate-800">🖨️ Drukāt vai Saglabāt PDF Rēķinu</button>
+                </div>
               </div>
             )}
 
