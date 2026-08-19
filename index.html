@@ -9,12 +9,143 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
   <div id="root"></div>
 
-  <script type="text/babel" src="App.jsx"></script>
-
   <script type="text/babel">
+    const { useState } = React;
+
+    function CraftMateApp() {
+      const [client, setClient] = useState({ name: 'Jānis Bērziņš', address: 'Mētru iela 12, Berģi', title: 'Vannas istabas remonts' });
+      const [area, setArea] = useState(12);
+      const [perimeter, setPerimeter] = useState(14);
+      
+      const [items, setItems] = useState([
+        { id: 1, name: 'Flīžu un apdares demontāža', rate: 15, qty: 12, unit: 'm²', type: 'area' },
+        { id: 2, name: 'Sienu un grīdas hidroizolācija', rate: 8, qty: 12, unit: 'm²', type: 'area' },
+        { id: 3, name: 'Sienu un grīdu flīzēšana', rate: 35, qty: 12, unit: 'm²', type: 'area' },
+        { id: 4, name: 'Grīdlīstu un stūru montāža', rate: 5, qty: 14, unit: 'm', type: 'perimeter' },
+        { id: 5, name: 'Santehnikas ierīču uzstādīšana', rate: 45, qty: 3, unit: 'gab.', type: 'fixed' },
+      ]);
+
+      const [materials, setMaterials] = useState([
+        { id: 1, name: 'Hidroizolācijas sastāvs (15kg)', qty: '2 tvertnes', bought: true },
+        { id: 2, name: 'Flīžu līme (25kg)', qty: '6 maisi', bought: false },
+        { id: 3, name: 'Flīžu šuvotājs (5kg)', qty: '1 iepakojums', bought: false },
+        { id: 4, name: 'Sanitārais silikons', qty: '3 gab.', bought: true },
+      ]);
+
+      const handleAreaChange = (val) => {
+        const newArea = Number(val);
+        setArea(newArea);
+        setItems(items.map(item => item.type === 'area' ? { ...item, qty: newArea } : item));
+      };
+
+      const toggleMaterial = (id) => {
+        setMaterials(materials.map(m => m.id === id ? { ...m, bought: !m.bought } : m));
+      };
+
+      const subtotalWorks = items.reduce((sum, item) => sum + (item.rate * item.qty), 0);
+      const supervision = subtotalWorks * 0.10;
+      const totalBeforeTax = subtotalWorks + supervision;
+      const vat = totalBeforeTax * 0.21;
+      const grandTotal = totalBeforeTax + vat;
+
+      return (
+        <div class="max-w-md mx-auto bg-slate-900 text-slate-100 min-h-screen pb-20 border-x border-slate-800">
+          <header class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center font-black text-slate-950">C</div>
+              <h1 class="text-xl font-bold tracking-wide">Craft<span class="text-amber-500">Mate</span></h1>
+            </div>
+            <span class="text-xs bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-full font-semibold border border-amber-500/20">V1 PROTOTIPS</span>
+          </header>
+
+          <main class="p-4 space-y-6">
+            <section class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 space-y-3">
+              <div class="text-amber-500 font-semibold text-sm">🏢 OBJEKTS & KLIENTS</div>
+              <div class="grid grid-cols-1 gap-2 text-sm">
+                <input type="text" value={client.title} onChange={e => setClient({...client, title: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-white font-medium focus:border-amber-500 outline-none" placeholder="Projekta nosaukums" />
+                <input type="text" value={client.name} onChange={e => setClient({...client, name: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-slate-300 focus:border-amber-500 outline-none" placeholder="Klienta vārds" />
+                <input type="text" value={client.address} onChange={e => setClient({...client, address: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-slate-300 focus:border-amber-500 outline-none" placeholder="Adrese" />
+              </div>
+            </section>
+
+            <section class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 space-y-4">
+              <div class="flex justify-between items-center">
+                <div class="text-amber-500 font-semibold text-sm">🧮 TELPAS PARAMETRI</div>
+                <span class="text-xs text-slate-400">Gatavais komplekts: Vannas istaba</span>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                  <label class="text-xs text-slate-400 block mb-1">Platība (m²)</label>
+                  <input type="number" value={area} onChange={e => handleAreaChange(e.target.value)} class="w-full bg-transparent text-xl font-bold text-amber-500 outline-none" />
+                </div>
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                  <label class="text-xs text-slate-400 block mb-1">Perimetrs (m)</label>
+                  <input type="number" value={perimeter} onChange={e => setPerimeter(Number(e.target.value))} class="w-full bg-transparent text-xl font-bold text-amber-500 outline-none" />
+                </div>
+              </div>
+
+              <div class="space-y-2 pt-2">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Darbu pozīcijas</div>
+                {items.map((item) => (
+                  <div key={item.id} class="flex justify-between items-center p-2.5 bg-slate-900/80 rounded-lg text-sm border border-slate-800">
+                    <div class="pr-2">
+                      <div class="font-medium text-slate-200">{item.name}</div>
+                      <div class="text-xs text-slate-400">{item.qty} {item.unit} × {item.rate.toFixed(2)} €</div>
+                    </div>
+                    <div class="font-bold text-slate-100 font-mono">{(item.qty * item.rate).toFixed(2)} €</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 space-y-3">
+              <div class="flex justify-between items-center">
+                <div class="text-amber-500 font-semibold text-sm">📦 MATERIĀLI OBJEKTAM</div>
+              </div>
+              <div class="space-y-2">
+                {materials.map((m) => (
+                  <div key={m.id} onClick={() => toggleMaterial(m.id)} class="flex items-center justify-between p-2.5 bg-slate-900/50 rounded-lg text-sm cursor-pointer hover:bg-slate-900 border border-slate-800/80">
+                    <div class="flex items-center gap-3">
+                      <span>{m.bought ? '☑️' : '⏹️'}</span>
+                      <span class={m.bought ? 'line-through text-slate-500' : 'text-slate-200'}>{m.name}</span>
+                    </div>
+                    <span class="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400">{m.qty}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/30 space-y-2 font-mono">
+              <div class="flex justify-between text-xs text-slate-300">
+                <span>Darbu summa:</span>
+                <span>{subtotalWorks.toFixed(2)} €</span>
+              </div>
+              <div class="flex justify-between text-xs text-slate-300">
+                <span>Uzraudzība (10%):</span>
+                <span>{supervision.toFixed(2)} €</span>
+              </div>
+              <div class="flex justify-between text-xs text-slate-300">
+                <span>PVN (21%):</span>
+                <span>{vat.toFixed(2)} €</span>
+              </div>
+              <div class="border-t border-amber-500/20 pt-2 flex justify-between font-bold text-lg text-amber-500">
+                <span>KOPĀ KLIENTAM:</span>
+                <span>{grandTotal.toFixed(2)} €</span>
+              </div>
+            </section>
+
+            <button class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/10">
+              📥 Ģenerēt PDF tāmi klientam
+            </button>
+          </main>
+        </div>
+      );
+    }
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<CraftMateApp />);
   </script>
