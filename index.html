@@ -3,151 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CraftMate – Rēķini un Tāmes</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Darbu un izcenojumu tāme</title>
     <style>
-        .blueprint-bg {
-            background-color: #0f172a;
-            background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        .tame-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 6px 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            text-align: right;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add {
+            background-color: #27ae60;
+            color: white;
+        }
+        .btn-add:hover {
+            background-color: #219150;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .summary-container {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 15px;
         }
     </style>
 </head>
-<body class="blueprint-bg text-slate-100 min-h-screen p-4 md:p-8">
+<body>
 
-<div id="root"></div>
+<div class="tame-container">
+    <h2>Darbu un izcenojumu tāme</h2>
 
-<script type="text/babel">
-    const { useState } = React;
+    <table id="tameTable">
+        <thead>
+            <tr>
+                <th style="width: 35%;">Darba apraksts</th>
+                <th style="width: 12%;">Daudzums</th>
+                <th style="width: 15%;">Mērvienība</th>
+                <th style="width: 15%;">Cena/vien. (€)</th>
+                <th style="width: 15%;">Kopā (€)</th>
+                <th style="width: 8%;">Darbība</th>
+            </tr>
+        </thead>
+        <tbody id="tameBody">
+            <tr>
+                <td><input type="text" value="Grīdas sagatavošana un ieklāšana" placeholder="Darba nosaukums"></td>
+                <td><input type="number" class="qty" value="50" min="0" step="any" oninput="calculateTame()"></td>
+                <td>
+                    <select>
+                        <option value="m²" selected>m²</option>
+                        <option value="m">m</option>
+                        <option value="gab.">gab.</option>
+                        <option value="kompl.">kompl.</option>
+                        <option value="h">h</option>
+                    </select>
+                </td>
+                <td><input type="number" class="price" value="12.00" min="0" step="0.01" oninput="calculateTame()"></td>
+                <td><input type="text" class="total" value="0.00" readonly style="background-color: #f9f9f9; font-weight: bold; text-align: right;"></td>
+                <td style="text-align: center;"><button class="btn btn-delete" onclick="deleteRow(this)">X</button></td>
+            </tr>
+        </tbody>
+    </table>
 
-    function CraftMateApp() {
-        const [items, setItems] = useState([
-            { id: 1, name: "Grīdas sagatavošana un ieklāšana", qty: 50, unit: "m²", price: 12.00 },
-            { id: 2, name: "Sienu špaktelēšana un krāsošana", qty: 120, unit: "m²", price: 15.00 },
-            { id: 3, name: "Cauruļvadu montāža", qty: 15, unit: "m", price: 25.00 },
-            { id: 4, name: "Elektromontāžas punktu izbūve", qty: 20, unit: "gab.", price: 18.00 },
-            { id: 5, name: "Demontāžas darbi", qty: 1, unit: "kompl.", price: 250.00 }
-        ]);
+    <button class="btn btn-add" onclick="addRow()">+ Pievienot darbu</button>
 
-        const handleItemChange = (id, field, value) => {
-            setItems(items.map(item => {
-                if (item.id === id) {
-                    return { ...item, [field]: field === 'name' || field === 'unit' ? value : parseFloat(value) || 0 };
-                }
-                return item;
-            }));
-        };
+    <div class="summary-container">
+        Kopā bez PVN: <span id="grandTotal">0.00</span> €
+    </div>
+</div>
 
-        const addItem = () => {
-            setItems([...items, { id: Date.now(), name: "", qty: 1, unit: "m²", price: 0.00 }]);
-        };
+<script>
+    function addRow() {
+        const tbody = document.getElementById('tameBody');
+        const newRow = document.createElement('tr');
 
-        const deleteItem = (id) => {
-            setItems(items.filter(item => item.id !== id));
-        };
+        newRow.innerHTML = `
+            <td><input type="text" placeholder="Darba nosaukums"></td>
+            <td><input type="number" class="qty" value="1" min="0" step="any" oninput="calculateTame()"></td>
+            <td>
+                <select>
+                    <option value="m²">m²</option>
+                    <option value="m">m</option>
+                    <option value="gab.">gab.</option>
+                    <option value="kompl.">kompl.</option>
+                    <option value="h">h</option>
+                </select>
+            </td>
+            <td><input type="number" class="price" value="0.00" min="0" step="0.01" oninput="calculateTame()"></td>
+            <td><input type="text" class="total" value="0.00" readonly style="background-color: #f9f9f9; font-weight: bold; text-align: right;"></td>
+            <td style="text-align: center;"><button class="btn btn-delete" onclick="deleteRow(this)">X</button></td>
+        `;
 
-        const calculateTotal = () => {
-            return items.reduce((sum, item) => sum + (item.qty * item.price), 0).toFixed(2);
-        };
-
-        return (
-            <div class="max-w-5xl mx-auto bg-slate-900/90 border border-slate-700 rounded-xl p-6 shadow-2xl backdrop-blur">
-                <div class="border-b border-slate-700 pb-4 mb-6">
-                    <h1 class="text-3xl font-bold text-blue-400">CraftMate Tāme</h1>
-                    <p class="text-slate-400 text-sm">Darbu saraksts un izcenojumu aprēķins</p>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse mb-6">
-                        <thead>
-                            <tr class="border-b border-slate-700 text-slate-400 text-sm">
-                                <th class="p-2 w-2/5">Darba apraksts</th>
-                                <th class="p-2 w-1/6">Daudzums</th>
-                                <th class="p-2 w-1/6">Mērvienība</th>
-                                <th class="p-2 w-1/6">Cena (€)</th>
-                                <th class="p-2 w-1/6 text-right">Kopā (€)</th>
-                                <th class="p-2 w-12 text-center"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.map((item) => (
-                                <tr key={item.id} class="border-b border-slate-800/80 hover:bg-slate-800/40">
-                                    <td class="p-2">
-                                        <input 
-                                            type="text" 
-                                            value={item.name} 
-                                            onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
-                                            placeholder="Ievadiet darbu..."
-                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500"
-                                        />
-                                    </td>
-                                    <td class="p-2">
-                                        <input 
-                                            type="number" 
-                                            value={item.qty} 
-                                            onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
-                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-right focus:outline-none focus:border-blue-500"
-                                        />
-                                    </td>
-                                    <td class="p-2">
-                                        <select 
-                                            value={item.unit} 
-                                            onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)}
-                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="m²">m²</option>
-                                            <option value="m">m</option>
-                                            <option value="gab.">gab.</option>
-                                            <option value="kompl.">kompl.</option>
-                                            <option value="h">h</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-2">
-                                        <input 
-                                            type="number" 
-                                            step="0.01"
-                                            value={item.price} 
-                                            onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
-                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-right focus:outline-none focus:border-blue-500"
-                                        />
-                                    </td>
-                                    <td class="p-2 text-right font-semibold text-blue-300">
-                                        {(item.qty * item.price).toFixed(2)} €
-                                    </td>
-                                    <td class="p-2 text-center">
-                                        <button 
-                                            onClick={() => deleteItem(item.id)}
-                                            class="text-red-400 hover:text-red-300 font-bold px-2 py-1"
-                                        >
-                                            ✕
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-700 pt-4">
-                    <button 
-                        onClick={addItem}
-                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-lg transition"
-                    >
-                        + Pievienot darbu
-                    </button>
-                    <div class="text-xl font-bold text-slate-200">
-                        Kopā bez PVN: <span class="text-blue-400">{calculateTotal()} €</span>
-                    </div>
-                </div>
-            </div>
-        );
+        tbody.appendChild(newRow);
+        calculateTame();
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<CraftMateApp />);
+    function deleteRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+        calculateTame();
+    }
+
+    function calculateTame() {
+        const rows = document.querySelectorAll('#tameBody tr');
+        let grandTotal = 0;
+
+        rows.forEach(row => {
+            const qtyInput = row.querySelector('.qty');
+            const priceInput = row.querySelector('.price');
+            const totalInput = row.querySelector('.total');
+
+            const qty = parseFloat(qtyInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+
+            const rowTotal = qty * price;
+            totalInput.value = rowTotal.toFixed(2);
+
+            grandTotal += rowTotal;
+        });
+
+        document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+    }
+
+    window.onload = calculateTame;
 </script>
 
 </body>
