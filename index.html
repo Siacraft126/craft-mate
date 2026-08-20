@@ -1,552 +1,154 @@
 <!DOCTYPE html>
 <html lang="lv">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CraftMate - Rēķini un Tāmes</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .blueprint-bg {
-      background-color: #0f172a;
-      background-image: 
-        linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftMate – Rēķini un Tāmes</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .blueprint-bg {
+            background-color: #0f172a;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
 </head>
-<body class="blueprint-bg text-slate-100 font-sans min-h-screen">
-  <div id="root"></div>
+<body class="blueprint-bg text-slate-100 min-h-screen p-4 md:p-8">
 
-  <script type="text/babel">
+<div id="root"></div>
+
+<script type="text/babel">
     const { useState } = React;
 
-    // Funkcija skaitļu pārvēršanai vārdos (Latviešu valodā)
-    function skaitsVardiem(amount) {
-      const eiro = Math.floor(amount);
-      const centi = Math.round((amount - eiro) * 100);
-      
-      const vieni = ['', 'viens', 'divi', 'trīs', 'četri', 'pieci', 'seši', 'septiņi', 'astoņi', 'deviņi'];
-      const padmiti = ['desmit', 'vienpadsmit', 'divpadsmit', 'trīspadsmit', 'četrpadsmit', 'piecpadsmit', 'sešpadsmit', 'septiņpadsmit', 'astoņpadsmit', 'deviņpadsmit'];
-      const desmiti = ['', 'desmit', 'divdesmit', 'trīsdesmit', 'četrdesmit', 'piecdesmit', 'sešdesmit', 'septiņdesmit', 'astoņdesmit', 'deviņdesmit'];
-      const simti = ['', 'simts', 'divi simti', 'trīs simti', 'četri simti', 'pieci simti', 'seši simti', 'septiņi simti', 'astoņi simti', 'deviņi simti'];
-
-      if (eiro === 0) return `nulle eiro un ${centi < 10 ? '0' + centi : centi} centi`;
-
-      function convertGroup(n) {
-        let res = '';
-        let s = Math.floor(n / 100);
-        let d = Math.floor((n % 100) / 10);
-        let v = n % 10;
-
-        if (s > 0) res += simti[s] + ' ';
-        if (d === 1) {
-          res += padmiti[v] + ' ';
-        } else {
-          if (d > 0) res += desmiti[d] + ' ';
-          if (v > 0) res += vieni[v] + ' ';
-        }
-        return res.trim();
-      }
-
-      let result = '';
-      let tukstosi = Math.floor(eiro / 1000);
-      let atlikums = eiro % 1000;
-
-      if (tukstosi > 0) {
-        result += convertGroup(tukstosi) + (tukstosi === 1 ? ' tūkstotis ' : ' tūkstoši ');
-      }
-      if (atlikums > 0 || result === '') {
-        result += convertGroup(atlikums);
-      }
-
-      result = result.trim();
-      result = result.charAt(0).toUpperCase() + result.slice(1);
-      
-      const centiStr = centi < 10 ? '0' + centi : centi;
-      return `${result} eiro un ${centiStr} centi`;
-    }
-
-    const MASTER_SERVICES = [
-      // SIENAS
-      { id: 's1', cat: 'Sienas', name: 'Laukakmeņu mūrēšanas darbi', price: 21.78, unit: 'St' },
-      { id: 's3', cat: 'Sienas', name: 'Daļējs sienas apmetums', price: 9.08, unit: 'm²' },
-      { id: 's4', cat: 'Sienas', name: 'Visas sienas apmetums (rokas darbs)', price: 10.29, unit: 'm²' },
-      { id: 's8', cat: 'Sienas', name: 'Sienas špaktelēšana', price: 12.64, unit: 'm²' },
-      { id: 's10', cat: 'Sienas', name: 'Slīpēšana', price: 4.20, unit: 'm²' },
-      { id: 's13', cat: 'Sienas', name: 'Krāsošana 2 kārtās', price: 8.23, unit: 'm²' },
-      { id: 's34', cat: 'Sienas', name: 'Sienu flīzēšana', price: 33.88, unit: 'm²' },
-
-      // GRIESTI
-      { id: 'g3', cat: 'Griesti', name: 'Griestu apmetums', price: 16.55, unit: 'm²' },
-      { id: 'g6', cat: 'Griesti', name: 'Griestu špaktelēšana', price: 14.91, unit: 'm²' },
-      { id: 'g9', cat: 'Griesti', name: 'Griestu krāsošana 2 kārtās', price: 9.08, unit: 'm²' },
-      { id: 'pol1', cat: 'Griesti', name: 'Poliuretāna karnīzes montāža', price: 21.00, unit: 't/m' },
-
-      // GRĪDA
-      { id: 'est1', cat: 'Grīda', name: 'Estrich grīdas ierīkošana līdz 8cm biezumam', price: 19.36, unit: 'm²' },
-      { id: 'gr12', cat: 'Grīda', name: 'Lamināta ieklāšana', price: 10.89, unit: 'm²' },
-      { id: 'gr14', cat: 'Grīda', name: 'Grīdas flīzēšana', price: 38.72, unit: 'm²' },
-
-      // SANTEHNIKA
-      { id: 'san4', cat: 'Santehnika', name: 'Ūdens cauruļu ierīkošana', price: 11.45, unit: 't/m' },
-      { id: 'san6', cat: 'Santehnika', name: 'Vannas uzstādīšana + pieslēgšana', price: 217.80, unit: 'kompl' }
-    ];
-
     function CraftMateApp() {
-      const [activeTab, setActiveTab] = useState('tames');
-      const [taxMode, setTaxMode] = useState('mun'); // pvn, mun, bez
-      const [searchTerm, setSearchTerm] = useState('');
-      const [activeCategory, setActiveCategory] = useState('Visas');
+        const [items, setItems] = useState([
+            { id: 1, name: "Grīdas sagatavošana un ieklāšana", qty: 50, unit: "m²", price: 12.00 },
+            { id: 2, name: "Sienu špaktelēšana un krāsošana", qty: 120, unit: "m²", price: 15.00 },
+            { id: 3, name: "Cauruļvadu montāža", qty: 15, unit: "m", price: 25.00 },
+            { id: 4, name: "Elektromontāžas punktu izbūve", qty: 20, unit: "gab.", price: 18.00 },
+            { id: 5, name: "Demontāžas darbi", qty: 1, unit: "kompl.", price: 250.00 }
+        ]);
 
-      // Custom darbi tāmē (Citi darbi)
-      const [customServices, setCustomServices] = useState([]);
-      const [customName, setCustomName] = useState('');
-      const [customPrice, setCustomPrice] = useState('');
-      const [customUnit, setCustomUnit] = useState('m²');
-      const [customQty, setCustomQty] = useState('1');
-
-      // Rēķina datumi un brīvais apraksts
-      const [invoiceNr, setInvoiceNr] = useState('2026-08/01');
-      const [invoiceDate, setInvoiceDate] = useState('2026-08-20');
-      const [dueDate, setDueDate] = useState('2026-08-27');
-      const [customInvoiceText, setCustomInvoiceText] = useState('Būvniecības un remontdarbi saskaņā ar abpusēju vienošanos.');
-
-      // Rekvizīti
-      const [vendor, setVendor] = useState({
-        vards: "Aleksandrs Sjomkins",
-        adrese: "Skolas iela 4, Iecava, Bauskas nov., LV-3913",
-        pknr: "11068413308",
-        banka: "A/S \"Swedbank\"",
-        konts: "LV25HABA0551062884182"
-      });
-
-      // Klienti
-      const [clients, setClients] = useState([
-        { id: 1, name: 'SIA "Ostiopātiskās medicīnas attīstības centrs"', regNr: '40003887484', address: 'Airu iela 39d, Rīga, LV-1015', banka: 'AS Magnetiq bank', konts: 'LV76LAPB0000146058803' },
-        { id: 2, name: 'Jānis Bērziņš (Privātpersona)', regNr: '-', address: 'Brīvības iela 45, Rīga', banka: 'Swedbank', konts: 'LV00HABA1234567890123' }
-      ]);
-      const [selectedClient, setSelectedClient] = useState(clients[0]);
-
-      // Jauna klienta pievienošanas forma
-      const [newClient, setNewClient] = useState({ name: '', regNr: '', address: '', banka: '', konts: '' });
-
-      // Izvēlētie pakalpojumi tāmē
-      const [selectedServices, setSelectedServices] = useState([
-        { id: 'est1', qty: 45 },
-        { id: 'pol1', qty: 18 }
-      ]);
-
-      // Uzdevumi un Miskaste
-      const [tasks, setTasks] = useState([
-        { id: 1, text: 'Saskaņot krāsu toņus objektā', done: true },
-        { id: 2, text: 'Atvest Estrich smiltis un cementu', done: false }
-      ]);
-      const [trash, setTrash] = useState([]);
-      const [newTask, setNewTask] = useState('');
-
-      // Pievienot manuālu darbu
-      const addCustomService = () => {
-        if (!customName || !customPrice) return;
-        const newId = 'c_' + Date.now();
-        const item = {
-          id: newId,
-          cat: 'Citi darbi',
-          name: customName,
-          price: parseFloat(customPrice) || 0,
-          unit: customUnit
+        const handleItemChange = (id, field, value) => {
+            setItems(items.map(item => {
+                if (item.id === id) {
+                    return { ...item, [field]: field === 'name' || field === 'unit' ? value : parseFloat(value) || 0 };
+                }
+                return item;
+            }));
         };
-        setCustomServices([...customServices, item]);
-        setSelectedServices([...selectedServices, { id: newId, qty: parseFloat(customQty) || 1 }]);
-        setCustomName('');
-        setCustomPrice('');
-      };
 
-      const toggleService = (id) => {
-        if (selectedServices.some(s => s.id === id)) {
-          setSelectedServices(selectedServices.filter(s => s.id !== id));
-        } else {
-          setSelectedServices([...selectedServices, { id, qty: 10 }]);
-        }
-      };
+        const addItem = () => {
+            setItems([...items, { id: Date.now(), name: "", qty: 1, unit: "m²", price: 0.00 }]);
+        };
 
-      const updateQty = (id, val) => {
-        const num = Number(val) || 0;
-        setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, qty: num } : s));
-      };
+        const deleteItem = (id) => {
+            setItems(items.filter(item => item.id !== id));
+        };
 
-      const addClient = () => {
-        if (!newClient.name) return;
-        const c = { ...newClient, id: Date.now() };
-        setClients([...clients, c]);
-        setSelectedClient(c);
-        setNewClient({ name: '', regNr: '', address: '', banka: '', konts: '' });
-      };
+        const calculateTotal = () => {
+            return items.reduce((sum, item) => sum + (item.qty * item.price), 0).toFixed(2);
+        };
 
-      const deleteClient = (id) => {
-        const updated = clients.filter(c => c.id !== id);
-        setClients(updated);
-        if (selectedClient && selectedClient.id === id && updated.length > 0) {
-          setSelectedClient(updated[0]);
-        }
-      };
+        return (
+            <div class="max-w-5xl mx-auto bg-slate-900/90 border border-slate-700 rounded-xl p-6 shadow-2xl backdrop-blur">
+                <div class="border-b border-slate-700 pb-4 mb-6">
+                    <h1 class="text-3xl font-bold text-blue-400">CraftMate Tāme</h1>
+                    <p class="text-slate-400 text-sm">Darbu saraksts un izcenojumu aprēķins</p>
+                </div>
 
-      const deleteTask = (id) => {
-        const taskToDelete = tasks.find(t => t.id === id);
-        if (taskToDelete) {
-          setTrash([...trash, taskToDelete]);
-          setTasks(tasks.filter(t => t.id !== id));
-        }
-      };
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse mb-6">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-sm">
+                                <th class="p-2 w-2/5">Darba apraksts</th>
+                                <th class="p-2 w-1/6">Daudzums</th>
+                                <th class="p-2 w-1/6">Mērvienība</th>
+                                <th class="p-2 w-1/6">Cena (€)</th>
+                                <th class="p-2 w-1/6 text-right">Kopā (€)</th>
+                                <th class="p-2 w-12 text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item) => (
+                                <tr key={item.id} class="border-b border-slate-800/80 hover:bg-slate-800/40">
+                                    <td class="p-2">
+                                        <input 
+                                            type="text" 
+                                            value={item.name} 
+                                            onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                                            placeholder="Ievadiet darbu..."
+                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500"
+                                        />
+                                    </td>
+                                    <td class="p-2">
+                                        <input 
+                                            type="number" 
+                                            value={item.qty} 
+                                            onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
+                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-right focus:outline-none focus:border-blue-500"
+                                        />
+                                    </td>
+                                    <td class="p-2">
+                                        <select 
+                                            value={item.unit} 
+                                            onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)}
+                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value="m²">m²</option>
+                                            <option value="m">m</option>
+                                            <option value="gab.">gab.</option>
+                                            <option value="kompl.">kompl.</option>
+                                            <option value="h">h</option>
+                                        </select>
+                                    </td>
+                                    <td class="p-2">
+                                        <input 
+                                            type="number" 
+                                            step="0.01"
+                                            value={item.price} 
+                                            onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
+                                            class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-right focus:outline-none focus:border-blue-500"
+                                        />
+                                    </td>
+                                    <td class="p-2 text-right font-semibold text-blue-300">
+                                        {(item.qty * item.price).toFixed(2)} €
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <button 
+                                            onClick={() => deleteItem(item.id)}
+                                            class="text-red-400 hover:text-red-300 font-bold px-2 py-1"
+                                        >
+                                            ✕
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-      const restoreTask = (id) => {
-        const taskToRestore = trash.find(t => t.id === id);
-        if (taskToRestore) {
-          setTasks([...tasks, taskToRestore]);
-          setTrash(trash.filter(t => t.id !== id));
-        }
-      };
-
-      const emptyTrash = () => {
-        setTrash([]);
-      };
-
-      const categories = ['Visas', 'Sienas', 'Griesti', 'Grīda', 'Santehnika', 'Citi darbi'];
-      const allServices = [...MASTER_SERVICES, ...customServices];
-
-      const filteredServices = allServices.filter(srv => {
-        const matchesCat = activeCategory === 'Visas' || srv.cat === activeCategory;
-        const matchesSearch = srv.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesCat && matchesSearch;
-      });
-
-      let subtotal = 0;
-      const itemsCalculated = selectedServices.map(sel => {
-        const srv = allServices.find(m => m.id === sel.id);
-        if (!srv) return null;
-        let price = srv.price;
-        if (srv.unit === 'm²' && sel.qty < 30 && sel.qty > 0) {
-          price = price * 1.275;
-        }
-        const total = price * sel.qty;
-        subtotal += total;
-        return { ...srv, qty: sel.qty, finalPrice: price, total };
-      }).filter(Boolean);
-
-      let taxAmount = 0;
-      if (taxMode === 'pvn') taxAmount = subtotal * 0.21;
-      else if (taxMode === 'mun') taxAmount = subtotal * 0.25;
-
-      const grandTotal = subtotal + taxAmount;
-
-      return (
-        <div class="max-w-2xl mx-auto bg-slate-900/95 text-slate-100 min-h-screen pb-20 border-x border-blue-500/30 shadow-2xl">
-          {/* Header */}
-          <header class="p-4 bg-slate-950 border-b border-blue-500/40 relative overflow-hidden">
-            <div class="flex justify-between items-center relative z-10">
-              <div>
-                <h1 class="text-xl font-black text-amber-500 tracking-wider">AS CRAFT <span class="text-blue-400 font-light">| Engineering</span></h1>
-                <p class="text-xs text-slate-400">Izpildītājs: <span class="text-slate-200 font-bold">{vendor.vards}</span></p>
-              </div>
-
-              {/* NODOKĻU IZVĒLE AUGŠĀ LABAJĀ STŪRĪ */}
-              <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
-                <button onClick={() => setTaxMode('pvn')} class={`px-2 py-1 rounded ${taxMode === 'pvn' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>PVN 21%</button>
-                <button onClick={() => setTaxMode('mun')} class={`px-2 py-1 rounded ${taxMode === 'mun' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>MUN 25%</button>
-                <button onClick={() => setTaxMode('bez')} class={`px-2 py-1 rounded ${taxMode === 'bez' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Bez PVN</button>
-              </div>
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-700 pt-4">
+                    <button 
+                        onClick={addItem}
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-lg transition"
+                    >
+                        + Pievienot darbu
+                    </button>
+                    <div class="text-xl font-bold text-slate-200">
+                        Kopā bez PVN: <span class="text-blue-400">{calculateTotal()} €</span>
+                    </div>
+                </div>
             </div>
-
-            {/* NAVIGĀCIJA */}
-            <nav class="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-slate-800 text-center text-xs font-semibold">
-              <button onClick={() => setActiveTab('tames')} class={`p-2 rounded ${activeTab === 'tames' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📋 Tāme</button>
-              <button onClick={() => setActiveTab('rekini')} class={`p-2 rounded ${activeTab === 'rekini' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📑 Rēķini</button>
-              <button onClick={() => setActiveTab('klienti')} class={`p-2 rounded ${activeTab === 'klienti' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>👥 Klienti</button>
-              <button onClick={() => setActiveTab('foto')} class={`p-2 rounded ${activeTab === 'foto' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>🖼️ Plāni/Foto</button>
-              <button onClick={() => setActiveTab('uzdevumi')} class={`p-2 rounded ${activeTab === 'uzdevumi' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>✅ Uzdevumi</button>
-            </nav>
-          </header>
-
-          <main class="p-4 space-y-6">
-            {/* TĀME */}
-            {activeTab === 'tames' && (
-              <div class="space-y-4">
-                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-3">
-                  <input type="text" placeholder="🔍 Meklēt darbu..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-blue-500" />
-                  
-                  <div class="flex gap-1 overflow-x-auto pb-1 text-xs">
-                    {categories.map(cat => (
-                      <button key={cat} onClick={() => setActiveCategory(cat)} class={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all ${activeCategory === cat ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
-                        {cat === 'Sienas' ? '🧱 Sienas' : cat === 'Griesti' ? '🏠 Griesti' : cat === 'Grīda' ? '🪵 Grīda' : cat === 'Santehnika' ? '🚰 Santehnika' : cat === 'Citi darbi' ? '🛠️ Citi darbi' : '🌐 Visas'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SADAĻA: CITI DARBI (MANUĀLĀ PIEVIENOŠANA) */}
-                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2 text-xs">
-                  <h3 class="font-bold text-amber-400 text-sm">🛠️ PIEVIENOT CITU DARBU (MANUĀLI)</h3>
-                  <div class="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="Darba nosaukums (piem. Būvgružu izvešana)" value={customName} onChange={e => setCustomName(e.target.value)} class="col-span-2 bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                    <input type="number" placeholder="Cena (€)" value={customPrice} onChange={e => setCustomPrice(e.target.value)} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                    <div class="flex gap-1">
-                      <select value={customUnit} onChange={e => setCustomUnit(e.target.value)} class="bg-slate-900 border border-slate-700 rounded p-2 text-white">
-                        <option value="m²">m²</option>
-                        <option value="t/m">t/m</option>
-                        <option value="Stunda">Stunda</option>
-                        <option value="m³">m³</option>
-                        <option value="gab">gab</option>
-                        <option value="kompl">kompl</option>
-                      </select>
-                      <input type="number" placeholder="Daudz." value={customQty} onChange={e => setCustomQty(e.target.value)} class="w-16 bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                    </div>
-                  </div>
-                  <button onClick={addCustomService} class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-2 rounded mt-1">➕ Pievienot darbu tāmē</button>
-                </div>
-
-                {/* KATALOGS */}
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm">🛠️ KATALOGS ({activeCategory})</h3>
-                  <div class="max-h-64 overflow-y-auto space-y-2 pr-1">
-                    {filteredServices.map(srv => {
-                      const isSel = selectedServices.some(s => s.id === srv.id);
-                      return (
-                        <div key={srv.id} onClick={() => toggleService(srv.id)} class={`p-2.5 rounded-lg border text-sm flex items-center justify-between cursor-pointer transition-all ${isSel ? 'bg-amber-500/15 border-amber-500/60 text-amber-300' : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700'}`}>
-                          <div class="flex items-center gap-2">
-                            <span>{isSel ? '✅' : '⬛'}</span>
-                            <div>
-                              <div class="font-medium">{srv.name}</div>
-                              <div class="text-xs text-slate-400">[{srv.cat}] — {srv.price.toFixed(2)} € / {srv.unit}</div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* TĀMĒ IEKĻAUTIE DARBI */}
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm">📋 TĀMĒ IEKĻAUTIE DARBI</h3>
-                  {itemsCalculated.map(item => (
-                    <div key={item.id} class="bg-slate-900 p-3 rounded border border-slate-800 flex justify-between items-center text-sm">
-                      <div>
-                        <div class="font-medium text-slate-200">{item.name}</div>
-                        <div class="text-xs text-slate-400">{item.finalPrice.toFixed(2)} € / {item.unit}</div>
-                      </div>
-                      <div class="flex items-center gap-3">
-                        <input type="number" value={item.qty} onChange={e => updateQty(item.id, e.target.value)} class="w-16 bg-slate-800 border border-slate-700 rounded p-1 text-center font-bold text-amber-400" />
-                        <span class="font-mono text-amber-400 w-20 text-right">{item.total.toFixed(2)} €</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-500/40 text-right font-mono space-y-1">
-                  <div class="text-xs text-slate-400">Starpsumma: {subtotal.toFixed(2)} €</div>
-                  {taxMode !== 'bez' && <div class="text-xs text-amber-400">Nodoklis ({taxMode.toUpperCase()}): {taxAmount.toFixed(2)} €</div>}
-                  <div class="text-lg font-bold text-amber-500">KOPĀ APMAKSAI: {grandTotal.toFixed(2)} €</div>
-                </div>
-              </div>
-            )}
-
-            {/* RĒĶINI */}
-            {activeTab === 'rekini' && (
-              <div class="space-y-4">
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
-                  <h3 class="font-bold text-amber-400 text-sm">📅 RĒĶINA DATI UN IESTATĪJUMI</h3>
-                  <div class="grid grid-cols-3 gap-2">
-                    <div>
-                      <label class="block text-slate-400 mb-1">Rēķina Nr.:</label>
-                      <input type="text" value={invoiceNr} onChange={e => setInvoiceNr(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold" />
-                    </div>
-                    <div>
-                      <label class="block text-slate-400 mb-1">Izrakstīšanas datums:</label>
-                      <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
-                    </div>
-                    <div>
-                      <label class="block text-slate-400 mb-1">Apmaksas termiņš:</label>
-                      <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
-                    </div>
-                  </div>
-
-                  {/* BRĪVI AIZPILDĀMS DARBU APRAKSTS RĒĶINĀ */}
-                  <div class="pt-2">
-                    <label class="block text-amber-400 font-bold mb-1">✍️ BRĪVI AIZPILDĀMAIS DARBU APRAKSTS / PIEZĪMES RĒĶINĀ:</label>
-                    <textarea rows="2" value={customInvoiceText} onChange={e => setCustomInvoiceText(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" placeholder="Ierakstiet papildus informāciju vai darbu aprakstu..."></textarea>
-                  </div>
-                </div>
-
-                {/* OFICIĀLAIS RĒĶINS (PRINTOJAMS) */}
-                <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
-                  <div class="text-center font-bold text-base">
-                    Rēķins Nr.: {invoiceNr}
-                    <div class="text-xs font-normal text-slate-600 mt-0.5">Izrakstīšanas datums: {invoiceDate}</div>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-4 text-xs pt-2">
-                    <div>
-                      <strong class="block border-b border-slate-300 pb-1 mb-1">Maksātājs:</strong>
-                      <div>{selectedClient.name}</div>
-                      <div>Adrese: {selectedClient.address}</div>
-                      <div>Reģ./PK Nr. {selectedClient.regNr}</div>
-                      <div>Banka: {selectedClient.banka}</div>
-                      <div>Konta Nr. {selectedClient.konts}</div>
-                    </div>
-                    <div>
-                      <strong class="block border-b border-slate-300 pb-1 mb-1">Izpildītājs / Saņēmējs:</strong>
-                      <div>{vendor.vards}</div>
-                      <div>Adrese: {vendor.adrese}</div>
-                      <div>Nod.maks./PK Nr. {vendor.pknr}</div>
-                      <div>Banka: {vendor.banka}</div>
-                      <div>Konta Nr. {vendor.konts}</div>
-                    </div>
-                  </div>
-
-                  {/* BRĪVAIS APRAKSTS RĒĶINĀ */}
-                  <div class="text-xs p-2 bg-slate-100 rounded border border-slate-300 italic">
-                    <strong>Pakalpojuma apraksts:</strong> {customInvoiceText}
-                  </div>
-
-                  <table class="w-full text-xs border-collapse border border-slate-400 mt-4">
-                    <thead>
-                      <tr class="bg-amber-300">
-                        <th class="border border-slate-400 p-1 text-center">Nr.</th>
-                        <th class="border border-slate-400 p-1 text-left">Nosaukums</th>
-                        <th class="border border-slate-400 p-1 text-center">Mērv.</th>
-                        <th class="border border-slate-400 p-1 text-center">Daudz.</th>
-                        <th class="border border-slate-400 p-1 text-right">Summa EUR</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itemsCalculated.map((it, idx) => (
-                        <tr key={it.id}>
-                          <td class="border border-slate-400 p-1 text-center">{idx + 1}.</td>
-                          <td class="border border-slate-400 p-1">{it.name}</td>
-                          <td class="border border-slate-400 p-1 text-center">{it.unit}</td>
-                          <td class="border border-slate-400 p-1 text-center">{it.qty}</td>
-                          <td class="border border-slate-400 p-1 text-right">{it.total.toFixed(2)} EUR</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td colSpan="4" class="border border-slate-400 p-1 text-right font-bold">Kopā apmaksai:</td>
-                        <td class="border border-slate-400 p-1 text-right font-bold">{grandTotal.toFixed(2)} EUR</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* SUMMA AR VĀRDIEM */}
-                  <div class="text-xs font-bold pt-2 border-t border-slate-300 mt-3">
-                    Summa vārdiem: <span class="italic font-normal">{skaitsVardiem(grandTotal)}</span>
-                  </div>
-
-                  <div class="text-xs font-bold">
-                    Apmaksas termiņš: {dueDate}
-                  </div>
-                  <div class="text-xs italic text-center pt-4 text-slate-600">
-                    Šis rēķins ir sagatavots elektroniski un derīgs bez paraksta
-                  </div>
-
-                  <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2.5 rounded font-sans text-xs font-bold mt-4 shadow hover:bg-slate-800">🖨️ Drukāt / Saglabāt PDF Rēķinu</button>
-                </div>
-              </div>
-            )}
-
-            {/* KLIENTI (PIEVIENOŠANA UN DZĒŠANA) */}
-            {activeTab === 'klienti' && (
-              <div class="space-y-4">
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
-                  <h3 class="text-amber-500 font-bold text-sm">➕ PIEVIENOT JAUNU KLIENTU</h3>
-                  <input type="text" placeholder="Klienta nosaukums / Vārds" value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                  <input type="text" placeholder="Adrese" value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                  <div class="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="Reģ. / PK Nr." value={newClient.regNr} onChange={e => setNewClient({...newClient, regNr: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                    <input type="text" placeholder="Banka" value={newClient.banka} onChange={e => setNewClient({...newClient, banka: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                  </div>
-                  <input type="text" placeholder="Konta Nr. (IBAN)" value={newClient.konts} onChange={e => setNewClient({...newClient, konts: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
-                  <button onClick={addClient} class="w-full bg-amber-500 text-slate-950 font-bold py-2 rounded text-xs hover:bg-amber-400">Saglabāt klientu</button>
-                </div>
-
-                <div class="space-y-2">
-                  <h3 class="text-amber-500 font-bold text-sm">👥 ESOŠO KLIENTU SARAKSTS</h3>
-                  {clients.map(c => (
-                    <div key={c.id} class={`p-3 rounded-lg border text-sm flex justify-between items-center ${selectedClient.id === c.id ? 'bg-amber-500/20 border-amber-500' : 'bg-slate-800 border-slate-700'}`}>
-                      <div onClick={() => setSelectedClient(c)} class="cursor-pointer flex-1">
-                        <div class="font-bold text-amber-300">{c.name}</div>
-                        <div class="text-xs text-slate-400">{c.address} | Reģ.nr: {c.regNr}</div>
-                      </div>
-                      <button onClick={() => deleteClient(c.id)} class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-2.5 py-1.5 rounded ml-2">🗑️ Dzēst</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* FOTO / PLĀNI */}
-            {activeTab === 'foto' && (
-              <div class="space-y-4 text-center py-6 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/40">
-                <div class="text-4xl">📐</div>
-                <div class="text-sm text-slate-300 font-semibold">Objekta rasējumi, plāni un fotogrāfijas</div>
-                <input type="file" class="hidden" id="fileUp" />
-                <label htmlFor="fileUp" class="inline-block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded cursor-pointer">Pievienot Failu / Foto</label>
-              </div>
-            )}
-
-            {/* UZDEVUMI UN MISKASTE */}
-            {activeTab === 'uzdevumi' && (
-              <div class="space-y-5">
-                <div class="space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm">✅ UZDEVUMI</h3>
-                  <div class="flex gap-2">
-                    <input type="text" value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Jauns uzdevums..." class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none" />
-                    <button onClick={() => { if(newTask) { setTasks([...tasks, {id: Date.now(), text: newTask, done: false}]); setNewTask(''); } }} class="bg-amber-500 text-slate-950 font-bold px-3 text-xs rounded">Pievienot</button>
-                  </div>
-                  <div class="space-y-2 pt-2">
-                    {tasks.map(t => (
-                      <div key={t.id} class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded border border-slate-700 text-xs">
-                        <div class="flex items-center gap-2">
-                          <input type="checkbox" checked={t.done} onChange={() => setTasks(tasks.map(x => x.id === t.id ? {...x, done: !x.done} : x))} />
-                          <span class={t.done ? 'line-through text-slate-500' : 'text-slate-200'}>{t.text}</span>
-                        </div>
-                        <button onClick={() => deleteTask(t.id)} class="text-red-400 hover:text-red-300 font-bold px-2 py-0.5 rounded border border-red-500/30">Dzēst</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* MISKASTES SADAĻA */}
-                <div class="bg-slate-950 p-4 rounded-xl border border-red-900/40 space-y-3">
-                  <div class="flex justify-between items-center">
-                    <h3 class="text-red-400 font-bold text-xs flex items-center gap-1">🗑️ MISKASTE ({trash.length})</h3>
-                    {trash.length > 0 && (
-                      <button onClick={emptyTrash} class="bg-red-800 hover:bg-red-700 text-white font-bold text-xs px-2 py-1 rounded">Iztukšot miskasti</button>
-                    )}
-                  </div>
-                  {trash.length === 0 ? (
-                    <div class="text-xs text-slate-500 italic">Miskaste ir tukša</div>
-                  ) : (
-                    <div class="space-y-1.5">
-                      {trash.map(t => (
-                        <div key={t.id} class="flex justify-between items-center p-2 bg-slate-900 rounded text-xs text-slate-400 border border-slate-800">
-                          <span class="line-through">{t.text}</span>
-                          <button onClick={() => restoreTask(t.id)} class="text-blue-400 hover:text-blue-300 font-bold">Atjaunot ↩️</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </main>
-        </div>
-      );
+        );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<CraftMateApp />);
-  </script>
+    ReactDOM.createRoot(document.getElementById('root')).render(<CraftMateApp />);
+</script>
+
 </body>
 </html>
