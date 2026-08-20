@@ -24,110 +24,146 @@
   <script type="text/babel">
     const { useState } = React;
 
+    // Funkcija skaitļu pārvēršanai vārdos (Latviešu valodā)
+    function skaitsVardiem(amount) {
+      const eiro = Math.floor(amount);
+      const centi = Math.round((amount - eiro) * 100);
+      
+      const vieni = ['', 'viens', 'divi', 'trīs', 'četri', 'pieci', 'seši', 'septiņi', 'astoņi', 'deviņi'];
+      const padmiti = ['desmit', 'vienpadsmit', 'divpadsmit', 'trīspadsmit', 'četrpadsmit', 'piecpadsmit', 'sešpadsmit', 'septiņpadsmit', 'astoņpadsmit', 'deviņpadsmit'];
+      const desmiti = ['', 'desmit', 'divdesmit', 'trīsdesmit', 'četrdesmit', 'piecdesmit', 'sešdesmit', 'septiņdesmit', 'astoņdesmit', 'deviņdesmit'];
+      const simti = ['', 'simts', 'divi simti', 'trīs simti', 'četri simti', 'pieci simti', 'seši simti', 'septiņi simti', 'astoņi simti', 'deviņi simti'];
+
+      if (eiro === 0) return `nulle eiro un ${centi < 10 ? '0' + centi : centi} centi`;
+
+      function convertGroup(n) {
+        let res = '';
+        let s = Math.floor(n / 100);
+        let d = Math.floor((n % 100) / 10);
+        let v = n % 10;
+
+        if (s > 0) res += simti[s] + ' ';
+        if (d === 1) {
+          res += padmiti[v] + ' ';
+        } else {
+          if (d > 0) res += desmiti[d] + ' ';
+          if (v > 0) res += vieni[v] + ' ';
+        }
+        return res.trim();
+      }
+
+      let result = '';
+      let tukstosi = Math.floor(eiro / 1000);
+      let atlikums = eiro % 1000;
+
+      if (tukstosi > 0) {
+        result += convertGroup(tukstosi) + (tukstosi === 1 ? ' tūkstotis ' : ' tūkstoši ');
+      }
+      if (atlikums > 0 || result === '') {
+        result += convertGroup(atlikums);
+      }
+
+      result = result.trim();
+      result = result.charAt(0).toUpperCase() + result.slice(1);
+      
+      const centiStr = centi < 10 ? '0' + centi : centi;
+      return `${result} eiro un ${centiStr} centi`;
+    }
+
     const MASTER_SERVICES = [
       // SIENAS
       { id: 's1', cat: 'Sienas', name: 'Laukakmeņu mūrēšanas darbi', price: 21.78, unit: 'St' },
-      { id: 's2', cat: 'Sienas', name: 'Veco ķieģeļu mūrēšana - mākslinieciskā', price: 21.78, unit: 'St' },
       { id: 's3', cat: 'Sienas', name: 'Daļējs sienas apmetums', price: 9.08, unit: 'm²' },
       { id: 's4', cat: 'Sienas', name: 'Visas sienas apmetums (rokas darbs)', price: 10.29, unit: 'm²' },
-      { id: 's5', cat: 'Sienas', name: 'Plaisu apstrāde', price: 4.33, unit: 't/m' },
-      { id: 's6', cat: 'Sienas', name: 'Gruntēšana', price: 4.24, unit: 'm²' },
-      { id: 's7', cat: 'Sienas', name: 'Vecās apdares noņemšana (tapetes, krāsa)', price: 4.60, unit: 'm²' },
       { id: 's8', cat: 'Sienas', name: 'Sienas špaktelēšana', price: 12.64, unit: 'm²' },
-      { id: 's9', cat: 'Sienas', name: 'Špaktelēšana priekš LED apgaismojumam', price: 19.30, unit: 'm²' },
       { id: 's10', cat: 'Sienas', name: 'Slīpēšana', price: 4.20, unit: 'm²' },
-      { id: 's11', cat: 'Sienas', name: 'Stiklašķiedras sieta uzlīmēšana', price: 5.08, unit: 'm²' },
-      { id: 's12', cat: 'Sienas', name: 'Dekoratīva krāsošana (venecianka)', price: 19.36, unit: 'm²' },
       { id: 's13', cat: 'Sienas', name: 'Krāsošana 2 kārtās', price: 8.23, unit: 'm²' },
-      { id: 's14', cat: 'Sienas', name: 'Lamināta līmēšana uz sienām', price: 14.52, unit: 'm²' },
-      { id: 's15', cat: 'Sienas', name: 'Stūru uzstādīšana (iekšējais/ārējais)', price: 4.69, unit: 'gab' },
-      { id: 's16', cat: 'Sienas', name: 'Vinila tapešu līmēšana', price: 9.37, unit: 'm²' },
-      { id: 's17', cat: 'Sienas', name: 'Stiklšķiedras tapešu līmēšana', price: 11.93, unit: 'm²' },
-      { id: 's22', cat: 'Sienas', name: 'OSB3 plāksnes montāža (sienas)', price: 10.29, unit: 'm²' },
-      { id: 's23', cat: 'Sienas', name: 'Reģipša līmēšana uz sienām', price: 11.31, unit: 'm²' },
-      { id: 's25', cat: 'Sienas', name: 'Metāla karkasa izveide ģipškartonam', price: 11.18, unit: 'm²' },
-      { id: 's29', cat: 'Sienas', name: 'Ģipškartona starpsienu izveide', price: 21.18, unit: 'm²' },
       { id: 's34', cat: 'Sienas', name: 'Sienu flīzēšana', price: 33.88, unit: 'm²' },
 
       // GRIESTI
-      { id: 'g1', cat: 'Griesti', name: 'Vecās apdares noņemšana (griesti)', price: 5.46, unit: 'm²' },
-      { id: 'g2', cat: 'Griesti', name: 'Daļējs griestu apmetums', price: 15.00, unit: 'm²' },
       { id: 'g3', cat: 'Griesti', name: 'Griestu apmetums', price: 16.55, unit: 'm²' },
       { id: 'g6', cat: 'Griesti', name: 'Griestu špaktelēšana', price: 14.91, unit: 'm²' },
-      { id: 'g7', cat: 'Griesti', name: 'Griestu slīpēšana', price: 4.66, unit: 'm²' },
-      { id: 'g8', cat: 'Griesti', name: 'Griestu gruntēšana', price: 4.84, unit: 'm²' },
       { id: 'g9', cat: 'Griesti', name: 'Griestu krāsošana 2 kārtās', price: 9.08, unit: 'm²' },
-      { id: 'g12', cat: 'Griesti', name: 'Piekaramie griesti (Armstrong)', price: 16.94, unit: 'm²' },
-      { id: 'g13', cat: 'Griesti', name: 'Iestiepto griestu montāža', price: 29.28, unit: 'm²' },
-      { id: 'g16', cat: 'Griesti', name: 'Ģipškartona griesti ar metāla karkasu', price: 17.76, unit: 'm²' },
       { id: 'pol1', cat: 'Griesti', name: 'Poliuretāna karnīzes montāža', price: 21.00, unit: 't/m' },
 
       // GRĪDA
       { id: 'est1', cat: 'Grīda', name: 'Estrich grīdas ierīkošana līdz 8cm biezumam', price: 19.36, unit: 'm²' },
-      { id: 'gr1', cat: 'Grīda', name: 'Grīdas koka konstrukcijas izlīdzināšana', price: 9.05, unit: 'm²' },
-      { id: 'gr3', cat: 'Grīda', name: 'Betona grīda līdz 5cm ar armēšanu', price: 14.52, unit: 'm²' },
-      { id: 'gr4', cat: 'Grīda', name: 'Pašizlīdzinošā grīda', price: 8.65, unit: 'm²' },
-      { id: 'gr5', cat: 'Grīda', name: 'Grīdas hidroizolācija', price: 7.32, unit: 'm²' },
-      { id: 'gr7', cat: 'Grīda', name: 'Siltās grīdas ierīkošana', price: 19.36, unit: 'm²' },
-      { id: 'gr8', cat: 'Grīda', name: 'OSB3 plāksnes montāža (grīda)', price: 18.63, unit: 'm²' },
       { id: 'gr12', cat: 'Grīda', name: 'Lamināta ieklāšana', price: 10.89, unit: 'm²' },
       { id: 'gr14', cat: 'Grīda', name: 'Grīdas flīzēšana', price: 38.72, unit: 'm²' },
-      { id: 'pol2', cat: 'Grīda', name: 'Poliuretāna grīdlīstes montāža', price: 17.00, unit: 't/m' },
 
       // SANTEHNIKA
-      { id: 'san1', cat: 'Santehnika', name: 'Duškabīnes demontāža', price: 18.15, unit: 'kompl' },
-      { id: 'san3', cat: 'Santehnika', name: 'Kanalizācijas stāvvadu montāža', price: 29.68, unit: 't/m' },
       { id: 'san4', cat: 'Santehnika', name: 'Ūdens cauruļu ierīkošana', price: 11.45, unit: 't/m' },
-      { id: 'san6', cat: 'Santehnika', name: 'Vannas uzstādīšana + pieslēgšana', price: 217.80, unit: 'kompl' },
-      { id: 'san8', cat: 'Santehnika', name: 'Piekaramā tualetes poda uzstādīšana', price: 199.65, unit: 'kompl' },
-
-      // MEHĀNISMI
-      { id: 'm1', cat: 'Mehānismi', name: 'Zemes rakšana ar traktortehniku', price: 61.23, unit: 'Stunda' },
-      { id: 'm2', cat: 'Mehānismi', name: 'Zemes līdzināšana + traktortehnika', price: 51.91, unit: 'Stunda' },
-      { id: 'm3', cat: 'Mehānismi', name: 'Būvgružu izvešana / iznešana', price: 17.18, unit: 'm³' }
+      { id: 'san6', cat: 'Santehnika', name: 'Vannas uzstādīšana + pieslēgšana', price: 217.80, unit: 'kompl' }
     ];
 
     function CraftMateApp() {
       const [activeTab, setActiveTab] = useState('tames');
-      const [taxMode, setTaxMode] = useState('mun');
+      const [taxMode, setTaxMode] = useState('mun'); // pvn, mun, bez
       const [searchTerm, setSearchTerm] = useState('');
       const [activeCategory, setActiveCategory] = useState('Visas');
 
-      // Rediģējamie rēķina rekvizīti un datumi
+      // Custom darbi tāmē (Citi darbi)
+      const [customServices, setCustomServices] = useState([]);
+      const [customName, setCustomName] = useState('');
+      const [customPrice, setCustomPrice] = useState('');
+      const [customUnit, setCustomUnit] = useState('m²');
+      const [customQty, setCustomQty] = useState('1');
+
+      // Rēķina datumi un brīvais apraksts
       const [invoiceNr, setInvoiceNr] = useState('2026-08/01');
       const [invoiceDate, setInvoiceDate] = useState('2026-08-20');
       const [dueDate, setDueDate] = useState('2026-08-27');
+      const [customInvoiceText, setCustomInvoiceText] = useState('Būvniecības un remontdarbi saskaņā ar abpusēju vienošanos.');
 
-      // Rediģējamie izpildītāja rekvizīti
+      // Rekvizīti
       const [vendor, setVendor] = useState({
         vards: "Aleksandrs Sjomkins",
         adrese: "Skolas iela 4, Iecava, Bauskas nov., LV-3913",
         pknr: "11068413308",
         banka: "A/S \"Swedbank\"",
-        kod: "HABALV22",
         konts: "LV25HABA0551062884182"
       });
 
-      // Rediģējamie klienta rekvizīti
-      const [client, setClient] = useState({
-        name: 'SIA "Ostiopātiskās medicīnas attīstības centrs"',
-        regNr: '40003887484',
-        address: 'Airu iela 39d, Rīga, LV-1015',
-        banka: 'AS Magnetiq bank',
-        konts: 'LV76LAPB0000146058803'
-      });
+      // Klienti
+      const [clients, setClients] = useState([
+        { id: 1, name: 'SIA "Ostiopātiskās medicīnas attīstības centrs"', regNr: '40003887484', address: 'Airu iela 39d, Rīga, LV-1015', banka: 'AS Magnetiq bank', konts: 'LV76LAPB0000146058803' },
+        { id: 2, name: 'Jānis Bērziņš (Privātpersona)', regNr: '-', address: 'Brīvības iela 45, Rīga', banka: 'Swedbank', konts: 'LV00HABA1234567890123' }
+      ]);
+      const [selectedClient, setSelectedClient] = useState(clients[0]);
 
+      // Jauna klienta pievienošanas forma
+      const [newClient, setNewClient] = useState({ name: '', regNr: '', address: '', banka: '', konts: '' });
+
+      // Izvēlētie pakalpojumi tāmē
       const [selectedServices, setSelectedServices] = useState([
         { id: 'est1', qty: 45 },
-        { id: 'pol1', qty: 18 },
-        { id: 'm1', qty: 4 }
+        { id: 'pol1', qty: 18 }
       ]);
 
+      // Uzdevumi un Miskaste
       const [tasks, setTasks] = useState([
         { id: 1, text: 'Saskaņot krāsu toņus objektā', done: true },
         { id: 2, text: 'Atvest Estrich smiltis un cementu', done: false }
       ]);
+      const [trash, setTrash] = useState([]);
       const [newTask, setNewTask] = useState('');
+
+      // Pievienot manuālu darbu
+      const addCustomService = () => {
+        if (!customName || !customPrice) return;
+        const newId = 'c_' + Date.now();
+        const item = {
+          id: newId,
+          cat: 'Citi darbi',
+          name: customName,
+          price: parseFloat(customPrice) || 0,
+          unit: customUnit
+        };
+        setCustomServices([...customServices, item]);
+        setSelectedServices([...selectedServices, { id: newId, qty: parseFloat(customQty) || 1 }]);
+        setCustomName('');
+        setCustomPrice('');
+      };
 
       const toggleService = (id) => {
         if (selectedServices.some(s => s.id === id)) {
@@ -142,9 +178,46 @@
         setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, qty: num } : s));
       };
 
-      const categories = ['Visas', 'Sienas', 'Griesti', 'Grīda', 'Santehnika', 'Mehānismi'];
+      const addClient = () => {
+        if (!newClient.name) return;
+        const c = { ...newClient, id: Date.now() };
+        setClients([...clients, c]);
+        setSelectedClient(c);
+        setNewClient({ name: '', regNr: '', address: '', banka: '', konts: '' });
+      };
 
-      const filteredServices = MASTER_SERVICES.filter(srv => {
+      const deleteClient = (id) => {
+        const updated = clients.filter(c => c.id !== id);
+        setClients(updated);
+        if (selectedClient && selectedClient.id === id && updated.length > 0) {
+          setSelectedClient(updated[0]);
+        }
+      };
+
+      const deleteTask = (id) => {
+        const taskToDelete = tasks.find(t => t.id === id);
+        if (taskToDelete) {
+          setTrash([...trash, taskToDelete]);
+          setTasks(tasks.filter(t => t.id !== id));
+        }
+      };
+
+      const restoreTask = (id) => {
+        const taskToRestore = trash.find(t => t.id === id);
+        if (taskToRestore) {
+          setTasks([...tasks, taskToRestore]);
+          setTrash(trash.filter(t => t.id !== id));
+        }
+      };
+
+      const emptyTrash = () => {
+        setTrash([]);
+      };
+
+      const categories = ['Visas', 'Sienas', 'Griesti', 'Grīda', 'Santehnika', 'Citi darbi'];
+      const allServices = [...MASTER_SERVICES, ...customServices];
+
+      const filteredServices = allServices.filter(srv => {
         const matchesCat = activeCategory === 'Visas' || srv.cat === activeCategory;
         const matchesSearch = srv.name.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCat && matchesSearch;
@@ -152,7 +225,7 @@
 
       let subtotal = 0;
       const itemsCalculated = selectedServices.map(sel => {
-        const srv = MASTER_SERVICES.find(m => m.id === sel.id);
+        const srv = allServices.find(m => m.id === sel.id);
         if (!srv) return null;
         let price = srv.price;
         if (srv.unit === 'm²' && sel.qty < 30 && sel.qty > 0) {
@@ -163,8 +236,11 @@
         return { ...srv, qty: sel.qty, finalPrice: price, total };
       }).filter(Boolean);
 
-      const vatTotal = taxMode === 'pvn' ? subtotal * 0.21 : 0;
-      const grandTotal = subtotal + vatTotal;
+      let taxAmount = 0;
+      if (taxMode === 'pvn') taxAmount = subtotal * 0.21;
+      else if (taxMode === 'mun') taxAmount = subtotal * 0.25;
+
+      const grandTotal = subtotal + taxAmount;
 
       return (
         <div class="max-w-2xl mx-auto bg-slate-900/95 text-slate-100 min-h-screen pb-20 border-x border-blue-500/30 shadow-2xl">
@@ -175,13 +251,16 @@
                 <h1 class="text-xl font-black text-amber-500 tracking-wider">AS CRAFT <span class="text-blue-400 font-light">| Engineering</span></h1>
                 <p class="text-xs text-slate-400">Izpildītājs: <span class="text-slate-200 font-bold">{vendor.vards}</span></p>
               </div>
+
+              {/* NODOKĻU IZVĒLE AUGŠĀ LABAJĀ STŪRĪ */}
               <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
                 <button onClick={() => setTaxMode('pvn')} class={`px-2 py-1 rounded ${taxMode === 'pvn' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>PVN 21%</button>
-                <button onClick={() => setTaxMode('mun')} class={`px-2 py-1 rounded ${taxMode === 'mun' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Bez PVN</button>
+                <button onClick={() => setTaxMode('mun')} class={`px-2 py-1 rounded ${taxMode === 'mun' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>MUN 25%</button>
+                <button onClick={() => setTaxMode('bez')} class={`px-2 py-1 rounded ${taxMode === 'bez' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Bez PVN</button>
               </div>
             </div>
 
-            {/* Navigācijas izvēlne */}
+            {/* NAVIGĀCIJA */}
             <nav class="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-slate-800 text-center text-xs font-semibold">
               <button onClick={() => setActiveTab('tames')} class={`p-2 rounded ${activeTab === 'tames' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📋 Tāme</button>
               <button onClick={() => setActiveTab('rekini')} class={`p-2 rounded ${activeTab === 'rekini' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📑 Rēķini</button>
@@ -192,27 +271,45 @@
           </header>
 
           <main class="p-4 space-y-6">
+            {/* TĀME */}
             {activeTab === 'tames' && (
               <div class="space-y-4">
-                {/* Kategoriju Filtri un Meklētājs */}
                 <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-3">
                   <input type="text" placeholder="🔍 Meklēt darbu..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-blue-500" />
                   
                   <div class="flex gap-1 overflow-x-auto pb-1 text-xs">
                     {categories.map(cat => (
                       <button key={cat} onClick={() => setActiveCategory(cat)} class={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all ${activeCategory === cat ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
-                        {cat === 'Sienas' ? '🧱 Sienas' : cat === 'Griesti' ? '🏠 Griesti' : cat === 'Grīda' ? '🪵 Grīda' : cat === 'Santehnika' ? '🚰 Santehnika' : cat === 'Mehānismi' ? '🚜 Mehānismi' : '🌐 Visas'}
+                        {cat === 'Sienas' ? '🧱 Sienas' : cat === 'Griesti' ? '🏠 Griesti' : cat === 'Grīda' ? '🪵 Grīda' : cat === 'Santehnika' ? '🚰 Santehnika' : cat === 'Citi darbi' ? '🛠️ Citi darbi' : '🌐 Visas'}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Katalogs */}
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
-                  <h3 class="text-amber-500 font-bold text-sm flex justify-between items-center">
-                    <span>🛠️ KATALOGS ({activeCategory})</span>
-                  </h3>
+                {/* SADAĻA: CITI DARBI (MANUĀLĀ PIEVIENOŠANA) */}
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2 text-xs">
+                  <h3 class="font-bold text-amber-400 text-sm">🛠️ PIEVIENOT CITU DARBU (MANUĀLI)</h3>
+                  <div class="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="Darba nosaukums (piem. Būvgružu izvešana)" value={customName} onChange={e => setCustomName(e.target.value)} class="col-span-2 bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                    <input type="number" placeholder="Cena (€)" value={customPrice} onChange={e => setCustomPrice(e.target.value)} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                    <div class="flex gap-1">
+                      <select value={customUnit} onChange={e => setCustomUnit(e.target.value)} class="bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <option value="m²">m²</option>
+                        <option value="t/m">t/m</option>
+                        <option value="Stunda">Stunda</option>
+                        <option value="m³">m³</option>
+                        <option value="gab">gab</option>
+                        <option value="kompl">kompl</option>
+                      </select>
+                      <input type="number" placeholder="Daudz." value={customQty} onChange={e => setCustomQty(e.target.value)} class="w-16 bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                    </div>
+                  </div>
+                  <button onClick={addCustomService} class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-2 rounded mt-1">➕ Pievienot darbu tāmē</button>
+                </div>
 
+                {/* KATALOGS */}
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                  <h3 class="text-amber-500 font-bold text-sm">🛠️ KATALOGS ({activeCategory})</h3>
                   <div class="max-h-64 overflow-y-auto space-y-2 pr-1">
                     {filteredServices.map(srv => {
                       const isSel = selectedServices.some(s => s.id === srv.id);
@@ -231,7 +328,7 @@
                   </div>
                 </div>
 
-                {/* Izvēlēto darbu saraksts */}
+                {/* TĀMĒ IEKĻAUTIE DARBI */}
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
                   <h3 class="text-amber-500 font-bold text-sm">📋 TĀMĒ IEKĻAUTIE DARBI</h3>
                   {itemsCalculated.map(item => (
@@ -249,78 +346,55 @@
                 </div>
 
                 <div class="bg-slate-950 p-4 rounded-xl border border-amber-500/40 text-right font-mono space-y-1">
-                  <div class="text-xs text-slate-400">Summa (bez PVN): {subtotal.toFixed(2)} €</div>
+                  <div class="text-xs text-slate-400">Starpsumma: {subtotal.toFixed(2)} €</div>
+                  {taxMode !== 'bez' && <div class="text-xs text-amber-400">Nodoklis ({taxMode.toUpperCase()}): {taxAmount.toFixed(2)} €</div>}
                   <div class="text-lg font-bold text-amber-500">KOPĀ APMAKSAI: {grandTotal.toFixed(2)} €</div>
                 </div>
               </div>
             )}
 
-            {/* RĒĶINU SADAĻA AR PILNĪGI REDIĢĒJAMIEM REKVIZĪTIEM */}
+            {/* RĒĶINI */}
             {activeTab === 'rekini' && (
               <div class="space-y-4">
-                {/* ⚙️ Rēķina numurs un datumi */}
                 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
-                  <h3 class="font-bold text-amber-400 text-sm">📅 DATUMI UN NUMURS</h3>
+                  <h3 class="font-bold text-amber-400 text-sm">📅 RĒĶINA DATI UN IESTATĪJUMI</h3>
                   <div class="grid grid-cols-3 gap-2">
                     <div>
                       <label class="block text-slate-400 mb-1">Rēķina Nr.:</label>
                       <input type="text" value={invoiceNr} onChange={e => setInvoiceNr(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold" />
                     </div>
                     <div>
-                      <label class="block text-slate-400 mb-1">Izrakstīts:</label>
+                      <label class="block text-slate-400 mb-1">Izrakstīšanas datums:</label>
                       <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
                     </div>
                     <div>
-                      <label class="block text-slate-400 mb-1">Apmaksa līdz:</label>
+                      <label class="block text-slate-400 mb-1">Apmaksas termiņš:</label>
                       <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white" />
                     </div>
                   </div>
-                </div>
 
-                {/* ⚙️ Izpildītāja un Klienta Rekvizītu Rediģēšana */}
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
-                  <h3 class="font-bold text-amber-400 text-sm">✏️ MAINĪT REKVIZĪTUS</h3>
-                  
-                  {/* Izpildītājs */}
-                  <div class="space-y-2 border-b border-slate-700 pb-3">
-                    <span class="font-bold text-blue-400 block">Izpildītāja (Mana) informācija:</span>
-                    <input type="text" value={vendor.vards} onChange={e => setVendor({...vendor, vards: e.target.value})} placeholder="Vārds / Uzņēmums" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    <input type="text" value={vendor.adrese} onChange={e => setVendor({...vendor, adrese: e.target.value})} placeholder="Adrese" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    <div class="grid grid-cols-2 gap-2">
-                      <input type="text" value={vendor.pknr} onChange={e => setVendor({...vendor, pknr: e.target.value})} placeholder="Reg/PK nr" class="bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                      <input type="text" value={vendor.banka} onChange={e => setVendor({...vendor, banka: e.target.value})} placeholder="Banka" class="bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    </div>
-                    <input type="text" value={vendor.konts} onChange={e => setVendor({...vendor, konts: e.target.value})} placeholder="Konta Nr. (IBAN)" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                  </div>
-
-                  {/* Klients */}
-                  <div class="space-y-2 pt-1">
-                    <span class="font-bold text-blue-400 block">Maksātāja (Klienta) informācija:</span>
-                    <input type="text" value={client.name} onChange={e => setClient({...client, name: e.target.value})} placeholder="Klienta nosaukums / vārds" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    <input type="text" value={client.address} onChange={e => setClient({...client, address: e.target.value})} placeholder="Klienta Adrese" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    <div class="grid grid-cols-2 gap-2">
-                      <input type="text" value={client.regNr} onChange={e => setClient({...client, regNr: e.target.value})} placeholder="Reg/PK nr" class="bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                      <input type="text" value={client.banka} onChange={e => setClient({...client, banka: e.target.value})} placeholder="Banka" class="bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
-                    </div>
-                    <input type="text" value={client.konts} onChange={e => setClient({...client, konts: e.target.value})} placeholder="Konta Nr." class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-slate-200" />
+                  {/* BRĪVI AIZPILDĀMS DARBU APRAKSTS RĒĶINĀ */}
+                  <div class="pt-2">
+                    <label class="block text-amber-400 font-bold mb-1">✍️ BRĪVI AIZPILDĀMAIS DARBU APRAKSTS / PIEZĪMES RĒĶINĀ:</label>
+                    <textarea rows="2" value={customInvoiceText} onChange={e => setCustomInvoiceText(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" placeholder="Ierakstiet papildus informāciju vai darbu aprakstu..."></textarea>
                   </div>
                 </div>
 
-                {/* Oficiālā rēķina izskats (Sagatavots drukāšanai) */}
+                {/* OFICIĀLAIS RĒĶINS (PRINTOJAMS) */}
                 <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
                   <div class="text-center font-bold text-base">
                     Rēķins Nr.: {invoiceNr}
-                    <div class="text-xs font-normal text-slate-600 mt-0.5">Izrakstīts: {invoiceDate}</div>
+                    <div class="text-xs font-normal text-slate-600 mt-0.5">Izrakstīšanas datums: {invoiceDate}</div>
                   </div>
 
                   <div class="grid grid-cols-2 gap-4 text-xs pt-2">
                     <div>
                       <strong class="block border-b border-slate-300 pb-1 mb-1">Maksātājs:</strong>
-                      <div>{client.name}</div>
-                      <div>Adrese: {client.address}</div>
-                      <div>Reģ./PK Nr. {client.regNr}</div>
-                      <div>Banka: {client.banka}</div>
-                      <div>Konta Nr. {client.konts}</div>
+                      <div>{selectedClient.name}</div>
+                      <div>Adrese: {selectedClient.address}</div>
+                      <div>Reģ./PK Nr. {selectedClient.regNr}</div>
+                      <div>Banka: {selectedClient.banka}</div>
+                      <div>Konta Nr. {selectedClient.konts}</div>
                     </div>
                     <div>
                       <strong class="block border-b border-slate-300 pb-1 mb-1">Izpildītājs / Saņēmējs:</strong>
@@ -330,6 +404,11 @@
                       <div>Banka: {vendor.banka}</div>
                       <div>Konta Nr. {vendor.konts}</div>
                     </div>
+                  </div>
+
+                  {/* BRĪVAIS APRAKSTS RĒĶINĀ */}
+                  <div class="text-xs p-2 bg-slate-100 rounded border border-slate-300 italic">
+                    <strong>Pakalpojuma apraksts:</strong> {customInvoiceText}
                   </div>
 
                   <table class="w-full text-xs border-collapse border border-slate-400 mt-4">
@@ -353,34 +432,60 @@
                         </tr>
                       ))}
                       <tr>
-                        <td colSpan="4" class="border border-slate-400 p-1 text-right font-bold">Summa apmaksai:</td>
+                        <td colSpan="4" class="border border-slate-400 p-1 text-right font-bold">Kopā apmaksai:</td>
                         <td class="border border-slate-400 p-1 text-right font-bold">{grandTotal.toFixed(2)} EUR</td>
                       </tr>
                     </tbody>
                   </table>
 
-                  <div class="text-xs font-bold pt-2">
-                    Samaksas termiņš līdz: {dueDate}
+                  {/* SUMMA AR VĀRDIEM */}
+                  <div class="text-xs font-bold pt-2 border-t border-slate-300 mt-3">
+                    Summa vārdiem: <span class="italic font-normal">{skaitsVardiem(grandTotal)}</span>
                   </div>
-                  <div class="text-xs italic text-center pt-6 text-slate-600">
+
+                  <div class="text-xs font-bold">
+                    Apmaksas termiņš: {dueDate}
+                  </div>
+                  <div class="text-xs italic text-center pt-4 text-slate-600">
                     Šis rēķins ir sagatavots elektroniski un derīgs bez paraksta
                   </div>
 
-                  <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2.5 rounded font-sans text-xs font-bold mt-4 shadow hover:bg-slate-800">🖨️ Drukāt vai Saglabāt PDF Rēķinu</button>
+                  <button onClick={() => window.print()} class="w-full bg-slate-900 text-white py-2.5 rounded font-sans text-xs font-bold mt-4 shadow hover:bg-slate-800">🖨️ Drukāt / Saglabāt PDF Rēķinu</button>
                 </div>
               </div>
             )}
 
+            {/* KLIENTI (PIEVIENOŠANA UN DZĒŠANA) */}
             {activeTab === 'klienti' && (
-              <div class="space-y-3">
-                <h3 class="text-amber-500 font-bold text-sm">👥 MANI KLIENTI</h3>
-                <div class="p-3 bg-slate-800 rounded border border-slate-700 text-sm">
-                  <div class="font-bold">{client.name}</div>
-                  <div class="text-xs text-slate-400">{client.address}</div>
+              <div class="space-y-4">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
+                  <h3 class="text-amber-500 font-bold text-sm">➕ PIEVIENOT JAUNU KLIENTU</h3>
+                  <input type="text" placeholder="Klienta nosaukums / Vārds" value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                  <input type="text" placeholder="Adrese" value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                  <div class="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="Reģ. / PK Nr." value={newClient.regNr} onChange={e => setNewClient({...newClient, regNr: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                    <input type="text" placeholder="Banka" value={newClient.banka} onChange={e => setNewClient({...newClient, banka: e.target.value})} class="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <input type="text" placeholder="Konta Nr. (IBAN)" value={newClient.konts} onChange={e => setNewClient({...newClient, konts: e.target.value})} class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                  <button onClick={addClient} class="w-full bg-amber-500 text-slate-950 font-bold py-2 rounded text-xs hover:bg-amber-400">Saglabāt klientu</button>
+                </div>
+
+                <div class="space-y-2">
+                  <h3 class="text-amber-500 font-bold text-sm">👥 ESOŠO KLIENTU SARAKSTS</h3>
+                  {clients.map(c => (
+                    <div key={c.id} class={`p-3 rounded-lg border text-sm flex justify-between items-center ${selectedClient.id === c.id ? 'bg-amber-500/20 border-amber-500' : 'bg-slate-800 border-slate-700'}`}>
+                      <div onClick={() => setSelectedClient(c)} class="cursor-pointer flex-1">
+                        <div class="font-bold text-amber-300">{c.name}</div>
+                        <div class="text-xs text-slate-400">{c.address} | Reģ.nr: {c.regNr}</div>
+                      </div>
+                      <button onClick={() => deleteClient(c.id)} class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-2.5 py-1.5 rounded ml-2">🗑️ Dzēst</button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
+            {/* FOTO / PLĀNI */}
             {activeTab === 'foto' && (
               <div class="space-y-4 text-center py-6 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/40">
                 <div class="text-4xl">📐</div>
@@ -390,20 +495,48 @@
               </div>
             )}
 
+            {/* UZDEVUMI UN MISKASTE */}
             {activeTab === 'uzdevumi' && (
-              <div class="space-y-3">
-                <h3 class="text-amber-500 font-bold text-sm">✅ UZDEVUMI</h3>
-                <div class="flex gap-2">
-                  <input type="text" value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Jauns uzdevums..." class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none" />
-                  <button onClick={() => { if(newTask) { setTasks([...tasks, {id: Date.now(), text: newTask, done: false}]); setNewTask(''); } }} class="bg-amber-500 text-slate-950 font-bold px-3 text-xs rounded">Pievienot</button>
+              <div class="space-y-5">
+                <div class="space-y-3">
+                  <h3 class="text-amber-500 font-bold text-sm">✅ UZDEVUMI</h3>
+                  <div class="flex gap-2">
+                    <input type="text" value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Jauns uzdevums..." class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none" />
+                    <button onClick={() => { if(newTask) { setTasks([...tasks, {id: Date.now(), text: newTask, done: false}]); setNewTask(''); } }} class="bg-amber-500 text-slate-950 font-bold px-3 text-xs rounded">Pievienot</button>
+                  </div>
+                  <div class="space-y-2 pt-2">
+                    {tasks.map(t => (
+                      <div key={t.id} class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded border border-slate-700 text-xs">
+                        <div class="flex items-center gap-2">
+                          <input type="checkbox" checked={t.done} onChange={() => setTasks(tasks.map(x => x.id === t.id ? {...x, done: !x.done} : x))} />
+                          <span class={t.done ? 'line-through text-slate-500' : 'text-slate-200'}>{t.text}</span>
+                        </div>
+                        <button onClick={() => deleteTask(t.id)} class="text-red-400 hover:text-red-300 font-bold px-2 py-0.5 rounded border border-red-500/30">Dzēst</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div class="space-y-2 pt-2">
-                  {tasks.map(t => (
-                    <div key={t.id} class="flex items-center gap-2 p-2 bg-slate-800/60 rounded border border-slate-700 text-xs">
-                      <input type="checkbox" checked={t.done} onChange={() => setTasks(tasks.map(x => x.id === t.id ? {...x, done: !x.done} : x))} />
-                      <span class={t.done ? 'line-through text-slate-500' : 'text-slate-200'}>{t.text}</span>
+
+                {/* MISKASTES SADAĻA */}
+                <div class="bg-slate-950 p-4 rounded-xl border border-red-900/40 space-y-3">
+                  <div class="flex justify-between items-center">
+                    <h3 class="text-red-400 font-bold text-xs flex items-center gap-1">🗑️ MISKASTE ({trash.length})</h3>
+                    {trash.length > 0 && (
+                      <button onClick={emptyTrash} class="bg-red-800 hover:bg-red-700 text-white font-bold text-xs px-2 py-1 rounded">Iztukšot miskasti</button>
+                    )}
+                  </div>
+                  {trash.length === 0 ? (
+                    <div class="text-xs text-slate-500 italic">Miskaste ir tukša</div>
+                  ) : (
+                    <div class="space-y-1.5">
+                      {trash.map(t => (
+                        <div key={t.id} class="flex justify-between items-center p-2 bg-slate-900 rounded text-xs text-slate-400 border border-slate-800">
+                          <span class="line-through">{t.text}</span>
+                          <button onClick={() => restoreTask(t.id)} class="text-blue-400 hover:text-blue-300 font-bold">Atjaunot ↩️</button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
