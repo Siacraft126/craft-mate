@@ -417,6 +417,13 @@
       // Jauna klienta pievienošanas forma
       const [newClient, setNewClient] = useState({ name: '', regNr: '', address: '', banka: '', konts: '' });
 
+      // Krāsu un toņu datubāze klientiem
+      const [clientColors, setClientColors] = useState([
+        { id: 1, clientId: 1, room: 'Kabinets un gaitenis', manufacturer: 'Tikkurila', colorName: 'Joker / Siena', ralCode: 'RAL 9010 (Balts)' },
+        { id: 2, clientId: 2, room: 'Viesistaba', manufacturer: 'Caparol', colorName: 'Samtex 7', ralCode: 'RAL 7035 (Gaiši pelēks)' }
+      ]);
+      const [newColorEntry, setNewColorEntry] = useState({ clientId: clients[0] ? clients[0].id : '', room: '', manufacturer: '', colorName: '', ralCode: '' });
+
       // Izvēlētie pakalpojumi tāmē
       const [selectedServices, setSelectedServices] = useState([
         { id: 'gr26', qty: 45 },
@@ -457,7 +464,6 @@
         }
       };
 
-      // Dzēst atsevišķu rindiņu no tāmē iekļautajiem darbiem
       const removeSelectedService = (id) => {
         setSelectedServices(selectedServices.filter(s => s.id !== id));
       };
@@ -467,7 +473,6 @@
         setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, qty: num } : s));
       };
 
-      // Cenas rediģēšana konkrētam darbam
       const updatePrice = (id, val) => {
         const num = parseFloat(val);
         setEditedPrices({
@@ -490,6 +495,24 @@
         if (selectedClient && selectedClient.id === id && updated.length > 0) {
           setSelectedClient(updated[0]);
         }
+      };
+
+      const addColorEntry = () => {
+        if (!newColorEntry.room || !newColorEntry.ralCode) return;
+        const entry = {
+          id: Date.now(),
+          clientId: Number(newColorEntry.clientId) || (clients[0] ? clients[0].id : 1),
+          room: newColorEntry.room,
+          manufacturer: newColorEntry.manufacturer,
+          colorName: newColorEntry.colorName,
+          ralCode: newColorEntry.ralCode
+        };
+        setClientColors([...clientColors, entry]);
+        setNewColorEntry({ clientId: clients[0] ? clients[0].id : '', room: '', manufacturer: '', colorName: '', ralCode: '' });
+      };
+
+      const deleteColorEntry = (id) => {
+        setClientColors(clientColors.filter(c => c.id !== id));
       };
 
       const deleteTask = (id) => {
@@ -615,7 +638,7 @@
               <button onClick={() => setActiveTab('tames')} class={`p-2 rounded ${activeTab === 'tames' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📋 Tāme</button>
               <button onClick={() => setActiveTab('rekini')} class={`p-2 rounded ${activeTab === 'rekini' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>📑 Rēķini</button>
               <button onClick={() => setActiveTab('klienti')} class={`p-2 rounded ${activeTab === 'klienti' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>👥 Klienti</button>
-              <button onClick={() => setActiveTab('foto')} class={`p-2 rounded ${activeTab === 'foto' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>🖼️ Plāni/Foto</button>
+              <button onClick={() => setActiveTab('krasas')} class={`p-2 rounded ${activeTab === 'krasas' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>🎨 Krāsas & Toti</button>
               <button onClick={() => setActiveTab('uzdevumi')} class={`p-2 rounded ${activeTab === 'uzdevumi' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>✅ Uzdevumi</button>
             </nav>
           </header>
@@ -685,7 +708,7 @@
                   </div>
                 </div>
 
-                {/* TĀMĒ IEKĻAUTIE DARBI (AR REDIĢĒJAMĀM CENĀM UN DZĒŠANU) */}
+                {/* TĀMĒ IEKĻAUTIE DARBI */}
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 space-y-3">
                   <h3 class="text-amber-500 font-bold text-sm">📋 TĀMĒ IEKĻAUTIE DARBI ({itemsCalculated.length})</h3>
                   {itemsCalculated.length === 0 ? (
@@ -699,7 +722,6 @@
                         </div>
 
                         <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                          {/* Cenas rediģēšana */}
                           <div class="flex flex-col text-right">
                             <span class="text-[10px] text-slate-400">Cena (€/{item.unit}):</span>
                             <input 
@@ -711,7 +733,6 @@
                             />
                           </div>
 
-                          {/* Daudzuma mainīšana */}
                           <div class="flex flex-col text-right">
                             <span class="text-[10px] text-slate-400">Daudzums:</span>
                             <input 
@@ -722,13 +743,11 @@
                             />
                           </div>
 
-                          {/* Kopējā summa par pozīciju */}
                           <div class="flex flex-col text-right min-w-[70px]">
                             <span class="text-[10px] text-slate-400">Kopā:</span>
                             <span class="font-mono text-amber-400 font-bold text-xs">{item.total.toFixed(2)} €</span>
                           </div>
 
-                          {/* Poga darba dzēšanai no tāmju saraksta */}
                           <button 
                             onClick={() => removeSelectedService(item.id)} 
                             title="Dzēst pozīciju"
@@ -776,7 +795,7 @@
                   </div>
                 </div>
 
-                {/* OFICIĀLAIS RĒĶINS (PRINTOJAMS / PDF) */}
+                {/* OFICIĀLAIS RĒĶINS */}
                 <div class="bg-white text-slate-900 p-6 rounded-xl shadow-2xl space-y-4 font-serif text-sm">
                   <div class="text-center font-bold text-base">
                     Rēķins Nr.: {invoiceNr}
@@ -893,13 +912,96 @@
               </div>
             )}
 
-            {/* FOTO / PLĀNI */}
-            {activeTab === 'foto' && (
-              <div class="space-y-4 text-center py-6 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/40">
-                <div class="text-4xl">📐</div>
-                <div class="text-sm text-slate-300 font-semibold">Objekta rasējumi, plāni un fotogrāfijas</div>
-                <input type="file" class="hidden" id="fileUp" />
-                <label htmlFor="fileUp" class="inline-block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded cursor-pointer">Pievienot Failu / Foto</label>
+            {/* KRĀSAS UN TOŅI */}
+            {activeTab === 'krasas' && (
+              <div class="space-y-4">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 text-xs">
+                  <h3 class="text-amber-500 font-bold text-sm">🎨 PIEVIENOT KLIENTA KRĀSAS UN RAL KODU</h3>
+                  
+                  <div>
+                    <label class="block text-slate-400 mb-1">Izvēlēties klientu:</label>
+                    <select 
+                      value={newColorEntry.clientId} 
+                      onChange={e => setNewColorEntry({...newColorEntry, clientId: e.target.value})} 
+                      class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                    >
+                      {clients.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-slate-400 mb-1">Telpa / Virsma:</label>
+                      <input 
+                        type="text" 
+                        placeholder="Piem. Viesistabas sienas" 
+                        value={newColorEntry.room} 
+                        onChange={e => setNewColorEntry({...newColorEntry, room: e.target.value})} 
+                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" 
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-slate-400 mb-1">Ražotājs / Krāsas tips:</label>
+                      <input 
+                        type="text" 
+                        placeholder="Piem. Tikkurila / Joker" 
+                        value={newColorEntry.manufacturer} 
+                        onChange={e => setNewColorEntry({...newColorEntry, manufacturer: e.target.value})} 
+                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" 
+                      />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-slate-400 mb-1">Krāsas nosaukums:</label>
+                      <input 
+                        type="text" 
+                        placeholder="Piem. Balta / Pelēka" 
+                        value={newColorEntry.colorName} 
+                        onChange={e => setNewColorEntry({...newColorEntry, colorName: e.target.value})} 
+                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" 
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-slate-400 mb-1">Precīzs RAL / Tonēšanas kods:</label>
+                      <input 
+                        type="text" 
+                        placeholder="Piem. RAL 9010 vai NCS S 0502-Y" 
+                        value={newColorEntry.ralCode} 
+                        onChange={e => setNewColorEntry({...newColorEntry, ralCode: e.target.value})} 
+                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-amber-400 font-bold" 
+                      />
+                    </div>
+                  </div>
+
+                  <button onClick={addColorEntry} class="w-full bg-amber-500 text-slate-950 font-bold py-2 rounded text-xs hover:bg-amber-400 mt-2">Saglabāt krāsu datubāzē</button>
+                </div>
+
+                <div class="space-y-3">
+                  <h3 class="text-amber-500 font-bold text-sm">📋 SAGLABĀTO KRĀSU UN TOŅU SARAKSTS</h3>
+                  {clientColors.length === 0 ? (
+                    <div class="text-xs text-slate-500 italic text-center py-4 bg-slate-800/40 rounded-xl border border-slate-800">Nav saglabātu krāsu ierakstu</div>
+                  ) : (
+                    clientColors.map(item => {
+                      const clientObj = clients.find(c => c.id === Number(item.clientId));
+                      return (
+                        <div key={item.id} class="bg-slate-800 p-3 rounded-xl border border-slate-700 text-xs space-y-1.5 flex justify-between items-start">
+                          <div class="space-y-1">
+                            <div class="font-bold text-amber-300 text-sm">👤 {clientObj ? clientObj.name : 'Nezināms klients'}</div>
+                            <div class="text-slate-200">🏠 <strong>Telpa:</strong> {item.room}</div>
+                            {item.manufacturer && <div class="text-slate-300">🏢 <strong>Ražotājs:</strong> {item.manufacturer}</div>}
+                            {item.colorName && <div class="text-slate-300">🖌️ <strong>Nosaukums:</strong> {item.colorName}</div>}
+                            <div class="text-amber-400 font-mono font-bold bg-slate-900 p-1 rounded inline-block mt-1">🏷️ Kodējums / RAL: {item.ralCode}</div>
+                          </div>
+                          <button onClick={() => deleteColorEntry(item.id)} class="bg-red-900/40 hover:bg-red-800 text-red-300 font-bold px-2 py-1 rounded border border-red-700/50">🗑️</button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             )}
 
