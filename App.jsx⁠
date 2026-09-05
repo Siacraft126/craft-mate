@@ -1,46 +1,90 @@
 <!DOCTYPE html>
 <html lang="lv">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Craft-Mate | Tāmju Kalkulators</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { margin-top: 15px; padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
-        .result { margin-top: 20px; font-size: 18px; font-weight: bold; color: #0056b3; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Craft-Mate | Tāmju Kalkulators</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
+    .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: 0 auto 20px auto; }
+    h2 { color: #f8fafc; margin-top: 0; }
+    label { display: block; margin-top: 10px; font-size: 14px; }
+    input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+    button { margin-top: 15px; padding: 12px; width: 100%; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    button:disabled { opacity: 0.6; }
+    .status { margin-top: 10px; font-size: 13px; color: #facc15; }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Craft-Mate Tāmes Aprēķins</h2>
-        
-        <label for="service">Pakalpojuma veids:</label>
-        <select id="service">
-            <option value="50">Koka karkasa darbi (€50/m²)</option>
-            <option value="12">Estrich grīdu ieklāšana (€12/m²)</option>
-            <option value="30">Santehnikas darbi (bāze €30/st)</option>
-            <option value="40">Apdare un interjers (€40/m²)</option>
-        </select>
 
-        <label for="amount">Apmērs (m² vai stundas):</label>
-        <input type="number" id="amount" placeholder="Ievadiet daudzumu" value="1">
+  <div class="card">
+    <h2>Craft-Mate Tāmes Aprēķins</h2>
+    <label for="service">Pakalpojuma veids:</label>
+    <select id="service">
+      <option value="50">Koka karkasa darbi (50 €/m²)</option>
+      <option value="40">Apdare un interjers (40 €/m²)</option>
+      <option value="35">Santehnika un komunikācijas (35 €/m²)</option>
+    </select>
 
-        <button onclick="calculate()">Aprēķināt tāmi</button>
+    <label for="area">Platība (m²):</label>
+    <input type="number" id="area" placeholder="Ievadiet m²" value="10">
 
-        <div class="result" id="totalResult">Kopā: €0.00</div>
-    </div>
+    <button onclick="calculate()">Aprēķināt tāmi</button>
+    <h3 id="result" style="margin-top: 15px;"></h3>
+  </div>
 
-    <script>
-        function calculate() {
-            const price = parseFloat(document.getElementById('service').value);
-            const amount = parseFloat(document.getElementById('amount').value) || 0;
-            const total = price * amount;
-            document.getElementById('totalResult').innerText = "Aptuvenā tāme: €" + total.toFixed(2);
-        }
-    </script>
+  <div class="card">
+    <h2>Pievienot dokumentu vai foto</h2>
+    <input type="file" id="fileInput">
+    <button id="uploadBtn" onclick="uploadFile()">Augšupielādēt uz Supabase</button>
+    <div id="uploadStatus" class="status"></div>
+  </div>
+
+  <script>
+    function calculate() {
+      const price = parseFloat(document.getElementById('service').value);
+      const area = parseFloat(document.getElementById('area').value) || 0;
+      document.getElementById('result').innerText = 'Kopā: ' + (price * area) + ' €';
+    }
+
+    const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co'; 
+    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    
+    const _supabase = window.supabase ? window.supabase.createClient(
+      window.ENV_SUPABASE_URL || SUPABASE_URL,
+      window.ENV_SUPABASE_KEY || SUPABASE_KEY
+    ) : null;
+
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const status = document.getElementById('uploadStatus');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Lūdzu, izvēlieties failu!');
+        return;
+      }
+
+      if (!_supabase) {
+        alert('Supabase klients nav konfigurēts!');
+        return;
+      }
+
+      status.innerText = 'Notiek augšupielāde...';
+      const fileName = Date.now() + '-' + file.name;
+
+      const { data, error } = await _supabase.storage
+        .from('craftmate-files')
+        .upload('uploads/' + fileName, file);
+
+      if (error) {
+        status.innerText = 'Kļūda: ' + error.message;
+      } else {
+        status.innerText = 'Fails veiksmīgi augšupielādēts!';
+        alert('Fails saglabāts mākonī!');
+      }
+    }
+  </script>
 </body>
 </html>
