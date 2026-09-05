@@ -1,120 +1,94 @@
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase konfigurācija
-const SUPABASE_URL = 'https://amber-coin.supabase.co';
-const SUPABASE_KEY = 'sb_publishable__Vkj57vXYe1DrJFIOKNJLA_jDGroKU7';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  
-  // Masīvs, kurā glabāsies visi augšupielādētie faili, lai tie parādītos programmā
-  const [filesList, setFilesList] = useState([]);
+  const [clientName, setClientName] = useState('');
+  const [colorCode, setColorCode] = useState('');
+  const [notes, setNotes] = useState('');
+  const [recordsList, setRecordsList] = useState([]);
 
-  const handleFileChange = async (e) => {
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleSaveRecord = (e) => {
+    e.preventDefault();
+    if (!clientName && !colorCode && !notes) return;
 
-      setErrorMsg('');
+    const newRecord = {
+      id: Date.now(),
+      client: clientName || 'Nenorādīts klients',
+      color: colorCode || 'Nav norādīts',
+      note: notes || 'Bez piezīmēm',
+      date: new Date().toLocaleDateString('lv-LV')
+    };
 
-      if (file.type.startsWith('image/')) {
-        setPreview(URL.createObjectURL(file));
-      } else {
-        setPreview(null);
-      }
-
-      setUploading(true);
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('craftmate-files')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('craftmate-files')
-        .getPublicUrl(filePath);
-
-      const publicUrl = data.publicUrl;
-
-      // Pievienojam jauno failu mūsu programmas failu sarakstam
-      setFilesList((prev) => [
-        ...prev,
-        { name: file.name, url: publicUrl, type: file.type }
-      ]);
-
-      // Notīrām priekšskatījumu pēc veiksmīgas augšupielādes
-      setPreview(null);
-    } catch (err) {
-      console.error('Kļūda augšupielādējot:', err);
-      setErrorMsg('Kļūda augšupielādējot failu: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
+    setRecordsList([newRecord, ...recordsList]);
+    setClientName('');
+    setColorCode('');
+    setNotes('');
   };
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto', backgroundColor: '#0f172a', color: '#fff', borderRadius: '12px', border: '1px solid #334155' }}>
-      <h1 style={{ fontSize: '20px', marginBottom: '15px' }}>AS CRAFT | Engineering - Faila augšupielāde</h1>
+      <h1 style={{ fontSize: '20px', marginBottom: '15px' }}>AS CRAFT | Būvniecības un Krāsu Uzskaite</h1>
       
-      <div style={{ border: '1px solid #475569', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1e293b' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-          Pievienot dokumentu vai foto
-        </label>
+      <form onSubmit={handleSaveRecord} style={{ border: '1px solid #475569', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1e293b' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Klienta nosaukums:</label>
+          <input 
+            type="text" 
+            value={clientName} 
+            onChange={(e) => setClientName(e.target.value)} 
+            placeholder="Piem., Taņa" 
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        {preview && (
-          <div style={{ width: '100%', height: '180px', backgroundColor: '#0f172a', borderRadius: '8px', overflow: 'hidden', marginBottom: '12px' }}>
-            <img src={preview} alt="Priekšskatījums" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-        )}
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Krāsu kods / Tonis:</label>
+          <input 
+            type="text" 
+            value={colorCode} 
+            onChange={(e) => setColorCode(e.target.value)} 
+            placeholder="Piem., RAL 7016 vai NCS S ival" 
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <input
-          type="file"
-          onChange={handleFileChange}
-          disabled={uploading}
-          style={{ display: 'block', width: '100%', fontSize: '14px', color: '#94a3b8' }}
-        />
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Piezīmes par būvniecības procesu:</label>
+          <textarea 
+            value={notes} 
+            onChange={(e) => setNotes(e.target.value)} 
+            placeholder="Kādi materiāli izmantoti, kurā telpā utt." 
+            rows="3"
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
+          />
+        </div>
 
-        {uploading && (
-          <p style={{ fontSize: '13px', color: '#facc15', marginTop: '10px', fontWeight: 'bold' }}>
-            Notiek faila augšupielāde uz Supabase...
-          </p>
-        )}
-      </div>
+        <button 
+          type="submit" 
+          style={{ width: '100%', padding: '10px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          Pievienot ierakstu
+        </button>
+      </form>
 
-      {errorMsg && (
-        <p style={{ color: '#f87171', backgroundColor: '#7f1d1d', padding: '10px', borderRadius: '6px', marginBottom: '15px' }}>{errorMsg}</p>
-      )}
-
-      {/* Augšupielādēto failu saraksts, kas tagad parādās programmā */}
-      {filesList.length > 0 && (
+      {recordsList.length > 0 && (
         <div style={{ backgroundColor: '#1e293b', padding: '15px', borderRadius: '8px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', margin: '0 0 10px 0', color: '#34d399' }}>Augšupielādētie faili projektā:</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {filesList.map((item, index) => (
-              <li key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #334155' }}>
-                <span style={{ fontSize: '14px', color: '#e2e8f0', wordBreak: 'break-all', marginRight: '10px' }}>
-                  📄 {item.name}
-                </span>
-                <a 
-                  href={item.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{ color: '#38bdf8', fontSize: '13px', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: '#0f172a', padding: '4px 8px', borderRadius: '4px', border: '1px solid #334155' }}
-                >
-                  Skatīt
-                </a>
-              </li>
+          <h3 style={{ fontSize: '16px', margin: '0 0 10px 0', color: '#34d399' }}>Saglabātie objekti un krāsas:</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {recordsList.map((item) => (
+              <div key={item.id} style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', border: '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '4px' }}>
+                  <span>{item.client}</span>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.date}</span>
+                </div>
+                <div style={{ fontSize: '13px', color: '#facc15', marginBottom: '4px' }}>
+                  Krāsu kods: {item.color}
+                </div>
+                <div style={{ fontSize: '13px', color: '#e2e8f0' }}>
+                  {item.note}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
