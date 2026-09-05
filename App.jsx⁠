@@ -9,8 +9,10 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 export default function App() {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
-  const [uploadedUrl, setUploadedUrl] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Masīvs, kurā glabāsies visi augšupielādētie faili, lai tie parādītos programmā
+  const [filesList, setFilesList] = useState([]);
 
   const handleFileChange = async (e) => {
     try {
@@ -18,7 +20,6 @@ export default function App() {
       if (!file) return;
 
       setErrorMsg('');
-      setUploadedUrl('');
 
       if (file.type.startsWith('image/')) {
         setPreview(URL.createObjectURL(file));
@@ -42,7 +43,16 @@ export default function App() {
         .from('craftmate-files')
         .getPublicUrl(filePath);
 
-      setUploadedUrl(data.publicUrl);
+      const publicUrl = data.publicUrl;
+
+      // Pievienojam jauno failu mūsu programmas failu sarakstam
+      setFilesList((prev) => [
+        ...prev,
+        { name: file.name, url: publicUrl, type: file.type }
+      ]);
+
+      // Notīrām priekšskatījumu pēc veiksmīgas augšupielādes
+      setPreview(null);
     } catch (err) {
       console.error('Kļūda augšupielādējot:', err);
       setErrorMsg('Kļūda augšupielādējot failu: ' + err.message);
@@ -52,8 +62,8 @@ export default function App() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '500px', margin: '0 auto', backgroundColor: '#0f172a', color: '#fff', borderRadius: '12px', border: '1px solid #334155' }}>
-      <h1>CraftMate - Faila augšupielāde</h1>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto', backgroundColor: '#0f172a', color: '#fff', borderRadius: '12px', border: '1px solid #334155' }}>
+      <h1 style={{ fontSize: '20px', marginBottom: '15px' }}>AS CRAFT | Engineering - Faila augšupielāde</h1>
       
       <div style={{ border: '1px solid #475569', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1e293b' }}>
         <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
@@ -81,16 +91,30 @@ export default function App() {
       </div>
 
       {errorMsg && (
-        <p style={{ color: '#f87171', backgroundColor: '#7f1d1d', padding: '10px', borderRadius: '6px' }}>{errorMsg}</p>
+        <p style={{ color: '#f87171', backgroundColor: '#7f1d1d', padding: '10px', borderRadius: '6px', marginBottom: '15px' }}>{errorMsg}</p>
       )}
 
-      {uploadedUrl && (
-        <div style={{ marginTop: '15px', wordBreak: 'break-all', backgroundColor: '#064e3b', padding: '12px', borderRadius: '8px' }}>
-          <p style={{ color: '#34d399', fontWeight: 'bold', margin: '0 0 5px 0' }}>Fails veiksmīgi augšupielādēts!</p>
-          <p style={{ fontSize: '13px', margin: '0 0 5px 0' }}>Saite uz failu:</p>
-          <a href={uploadedUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#6ee7b7' }}>
-            {uploadedUrl}
-          </a>
+      {/* Augšupielādēto failu saraksts, kas tagad parādās programmā */}
+      {filesList.length > 0 && (
+        <div style={{ backgroundColor: '#1e293b', padding: '15px', borderRadius: '8px', border: '1px solid #334155' }}>
+          <h3 style={{ fontSize: '16px', margin: '0 0 10px 0', color: '#34d399' }}>Augšupielādētie faili projektā:</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {filesList.map((item, index) => (
+              <li key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #334155' }}>
+                <span style={{ fontSize: '14px', color: '#e2e8f0', wordBreak: 'break-all', marginRight: '10px' }}>
+                  📄 {item.name}
+                </span>
+                <a 
+                  href={item.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: '#38bdf8', fontSize: '13px', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: '#0f172a', padding: '4px 8px', borderRadius: '4px', border: '1px solid #334155' }}
+                >
+                  Skatīt
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
