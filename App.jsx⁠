@@ -1,63 +1,77 @@
 import React, { useState } from 'react';
 
 export default function App() {
-  const [clientName, setClientName] = useState('');
-  const [colorCode, setColorCode] = useState('');
+  const [client, setClient] = useState('');
+  const [colors, setColors] = useState('');
+  const [materials, setMaterials] = useState('');
   const [notes, setNotes] = useState('');
-  const [recordsList, setRecordsList] = useState([]);
+  const [records, setRecords] = useState([]);
 
-  const handleSaveRecord = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!clientName && !colorCode && !notes) return;
+    if (!client && !colors && !materials) return;
 
     const newRecord = {
       id: Date.now(),
-      client: clientName || 'Nenorādīts klients',
-      color: colorCode || 'Nav norādīts',
-      note: notes || 'Bez piezīmēm',
+      client: client || 'Nenorādīts objekts / klients',
+      colors: colors || 'Nav norādīts',
+      materials: materials || 'Nav norādīts',
+      notes: notes || '',
       date: new Date().toLocaleDateString('lv-LV')
     };
 
-    setRecordsList([newRecord, ...recordsList]);
-    setClientName('');
-    setColorCode('');
+    setRecords([newRecord, ...records]);
+    setClient('');
+    setColors('');
+    setMaterials('');
     setNotes('');
   };
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto', backgroundColor: '#0f172a', color: '#fff', borderRadius: '12px', border: '1px solid #334155' }}>
-      <h1 style={{ fontSize: '20px', marginBottom: '15px' }}>AS CRAFT | Būvniecības un Krāsu Uzskaite</h1>
+      <h1 style={{ fontSize: '20px', marginBottom: '15px' }}>AS CRAFT | Materiālu un Krāsu Uzskaite</h1>
       
-      <form onSubmit={handleSaveRecord} style={{ border: '1px solid #475569', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1e293b' }}>
+      <form onSubmit={handleSubmit} style={{ border: '1px solid #475569', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1e293b' }}>
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Klienta nosaukums:</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Klienta vārds / Objekta nosaukums:</label>
           <input 
             type="text" 
-            value={clientName} 
-            onChange={(e) => setClientName(e.target.value)} 
-            placeholder="Piem., Taņa" 
+            value={client} 
+            onChange={(e) => setClient(e.target.value)} 
+            placeholder="Piem., Taņa / Brekšu iela" 
             style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box' }}
           />
         </div>
 
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Krāsu kods / Tonis:</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Krāsas un toņi (kodi):</label>
           <input 
             type="text" 
-            value={colorCode} 
-            onChange={(e) => setColorCode(e.target.value)} 
-            placeholder="Piem., RAL 7016 vai NCS S ival" 
+            value={colors} 
+            onChange={(e) => setColors(e.target.value)} 
+            placeholder="Piem., RAL 7016, Smoked oak eļļa" 
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Izlietotie materiāli:</label>
+          <input 
+            type="text" 
+            value={materials} 
+            onChange={(e) => setMaterials(e.target.value)} 
+            placeholder="Piem., Boen ozola parkets 25m², V33 eļļa 2L" 
             style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Piezīmes par būvniecības procesu:</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' }}>Papildu piezīmes / darbi:</label>
           <textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 
-            placeholder="Kādi materiāli izmantoti, kurā telpā utt." 
-            rows="3"
+            placeholder="Montāžas nianses, papildu detaļas..." 
+            rows="2"
             style={{ width: '100%', padding: '8px', borderRadius: '6px', backgroundColor: '#0f172a', border: '1px solid #475569', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}
           />
         </div>
@@ -66,26 +80,31 @@ export default function App() {
           type="submit" 
           style={{ width: '100%', padding: '10px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          Pievienot ierakstu
+          Saglabāt ierakstu sarakstā
         </button>
       </form>
 
-      {recordsList.length > 0 && (
+      {records.length > 0 && (
         <div style={{ backgroundColor: '#1e293b', padding: '15px', borderRadius: '8px', border: '1px solid #334155' }}>
-          <h3 style={{ fontSize: '16px', margin: '0 0 10px 0', color: '#34d399' }}>Saglabātie objekti un krāsas:</h3>
+          <h3 style={{ fontSize: '16px', margin: '0 0 10px 0', color: '#34d399' }}>Saglabātie objekti un materiāli:</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {recordsList.map((item) => (
-              <div key={item.id} style={{ backgroundColor: '#0f172a', padding: '10px', borderRadius: '6px', border: '1px solid #334155' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '4px' }}>
-                  <span>{item.client}</span>
+            {records.map((item) => (
+              <div key={item.id} style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#38bdf8', marginBottom: '6px' }}>
+                  <span>📍 {item.client}</span>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.date}</span>
                 </div>
                 <div style={{ fontSize: '13px', color: '#facc15', marginBottom: '4px' }}>
-                  Krāsu kods: {item.color}
+                  🎨 <b>Krāsas / Kods:</b> {item.colors}
                 </div>
-                <div style={{ fontSize: '13px', color: '#e2e8f0' }}>
-                  {item.note}
+                <div style={{ fontSize: '13px', color: '#34d399', marginBottom: '4px' }}>
+                  🧱 <b>Materiāli:</b> {item.materials}
                 </div>
+                {item.notes && (
+                  <div style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px', fontStyle: 'italic' }}>
+                    💬 {item.notes}
+                  </div>
+                )}
               </div>
             ))}
           </div>
