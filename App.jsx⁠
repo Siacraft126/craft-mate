@@ -1,90 +1,98 @@
-<!DOCTYPE html>
-<html lang="lv">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Craft-Mate | Tāmju Kalkulators</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
-    .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: 0 auto 20px auto; }
-    h2 { color: #f8fafc; margin-top: 0; }
-    label { display: block; margin-top: 10px; font-size: 14px; }
-    input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
-    button { margin-top: 15px; padding: 12px; width: 100%; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    button:disabled { opacity: 0.6; }
-    .status { margin-top: 10px; font-size: 13px; color: #facc15; }
-  </style>
-</head>
-<body>
+import React, { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-  <div class="card">
-    <h2>Craft-Mate Tāmes Aprēķins</h2>
-    <label for="service">Pakalpojuma veids:</label>
-    <select id="service">
-      <option value="50">Koka karkasa darbi (50 €/m²)</option>
-      <option value="40">Apdare un interjers (40 €/m²)</option>
-      <option value="35">Santehnika un komunikācijas (35 €/m²)</option>
-    </select>
+// Supabase konfigurācija
+const SUPABASE_URL = 'https://amber-coin.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__Vkj57vXYe1DrJFIOKNJLA_jDGroKU7';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <label for="area">Platība (m²):</label>
-    <input type="number" id="area" placeholder="Ievadiet m²" value="10">
+export default function App() {
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-    <button onclick="calculate()">Aprēķināt tāmi</button>
-    <h3 id="result" style="margin-top: 15px;"></h3>
-  </div>
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setErrorMsg('');
+    }
+  };
 
-  <div class="card">
-    <h2>Pievienot dokumentu vai foto</h2>
-    <input type="file" id="fileInput">
-    <button id="uploadBtn" onclick="uploadFile()">Augšupielādēt uz Supabase</button>
-    <div id="uploadStatus" class="status"></div>
-  </div>
-
-  <script>
-    function calculate() {
-      const price = parseFloat(document.getElementById('service').value);
-      const area = parseFloat(document.getElementById('area').value) || 0;
-      document.getElementById('result').innerText = 'Kopā: ' + (price * area) + ' €';
+  const handleUpload = async () => {
+    if (!file) {
+      setErrorMsg('Lūdzu, izvēlieties failu!');
+      return;
     }
 
-    const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co'; 
-    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    
-    const _supabase = window.supabase ? window.supabase.createClient(
-      window.ENV_SUPABASE_URL || SUPABASE_URL,
-      window.ENV_SUPABASE_KEY || SUPABASE_KEY
-    ) : null;
+    try {
+      setUploading(true);
+      setErrorMsg('');
 
-    async function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      const status = document.getElementById('uploadStatus');
-      const file = fileInput.files[0];
+      // Unikāls faila nosaukums
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-      if (!file) {
-        alert('Lūdzu, izvēlieties failu!');
-        return;
-      }
-
-      if (!_supabase) {
-        alert('Supabase klients nav konfigurēts!');
-        return;
-      }
-
-      status.innerText = 'Notiek augšupielāde...';
-      const fileName = Date.now() + '-' + file.name;
-
-      const { data, error } = await _supabase.storage
+      // Augšupielāde uz craftmate-files krātuvi
+      const { data, error } = await supabase.storage
         .from('craftmate-files')
-        .upload('uploads/' + fileName, file);
+        .upload(filePath, file);
 
       if (error) {
-        status.innerText = 'Kļūda: ' + error.message;
-      } else {
-        status.innerText = 'Fails veiksmīgi augšupielādēts!';
-        alert('Fails saglabāts mākonī!');
+        throw error;
       }
+
+      // Publiskās saites iegūšana
+      const { data: publicUrlData } = supabase.storage
+        .from('craftmate-files')
+        .getPublicUrl(filePath);
+
+      setUploadedUrl(publicUrlData.publicUrl);
+    } catch (err) {
+      console.error('Kļūda augšupielādējot:', err);
+      setErrorMsg('Kļūda augšupielādējot failu: ' + err.message);
+    } finally {
+      setUploading(false);
     }
-  </script>
-</body>
-</html>
+  };
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '500px', margin: '0 auto' }}>
+      <h1>CraftMate - Failu augšupielāde</h1>
+      
+      <div style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+        <input type="file" onChange={handleFileChange} disabled={uploading} />
+        <button 
+          onClick={handleUpload} 
+          disabled={uploading}
+          style={{
+            marginTop: '10px',
+            padding: '8px 16px',
+            backgroundColor: uploading ? '#ccc' : '#0070f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: uploading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {uploading ? 'Augšupielādē...' : 'Augšupielādēt failu'}
+        </button>
+      </div>
+
+      {errorMsg && (
+        <p style={{ color: 'red' }}>{errorMsg}</p>
+      )}
+
+      {uploadedUrl && (
+        <div style={{ marginTop: '15px', wordBreak: 'break-all' }}>
+          <p style={{ color: 'green', fontWeight: 'bold' }}>Fails veiksmīgi augšupielādēts!</p>
+          <p>Saite uz failu:</p>
+          <a href={uploadedUrl} target="_blank" rel="noopener noreferrer">
+            {uploadedUrl}
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
